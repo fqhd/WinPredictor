@@ -1,0 +1,16 @@
+{
+  "name": "winpredictor",
+  "version": "1.0.0",
+  "description": "An AI powered software that predicts a persons chance of winning a league of legends game",
+  "main": "download_match_data.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "type": "module",
+  "license": "ISC",
+  "dependencies": {
+    "node-fetch": "^3.3.1"
+  }
+}
