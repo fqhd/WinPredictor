@@ -57,7 +57,9 @@ async function getPlayerMatchIDs(summonerName) {
 }
 
 async function main() {
-    const f = ;
+    const f = fs.readFileSync('keys.txt', {
+        encoding: 'utf-8'
+    }).split('\n');
 
     console.log(f);
 }
