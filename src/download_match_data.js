@@ -8,11 +8,11 @@ let currentKey;
 let currentKeyIndex = 0;
 const MATCHES_PER_PLAYER = 50;
 
-function apiCall(url) {
-	url += currentKey;
+export function apiCall(url, key) {
+	url += key;
 	return new Promise((resolve, reject) => {
 		setTimeout(async () => {
-			const data = await fetch(url);
+			const data = await fetch(url).catch(e => reject(e));
 			resolve(data);
 		}, TIME_BETWEEN_REQUESTS);
 	});
