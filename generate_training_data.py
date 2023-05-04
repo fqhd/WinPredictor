@@ -2,7 +2,8 @@ import pandas as pd
 
 df = pd.read_csv('champions.csv')
 
-def get_row(champ_name):
+# Returns the vectorized form of a champion based on the recorded values in the champions.csv file
+def get_champ_vec(champ_name):
     arr = []
     row = df.loc[df['Champion'] == champ_name].iloc[0]
     for i in range(1, 16):
@@ -23,4 +24,20 @@ def get_row(champ_name):
             arr.append(row[i] / 10)
     return arr
 
-print(get_row('Riven'))
+def process_match(match_index):
+    with open('data/matches/' + str(match_index) + '.txt', 'r') as f:
+        rows = f.read().split('\n')
+        row = ''
+        for j in range(10):
+            champ_vec = get_champ_vec(rows[j])
+            for e in champ_vec:
+                row += str(float(e))
+                row += ','
+        if rows[10] == 'true':
+            row += '1.0'
+        else:
+            row += '0.0'
+        return row
+
+
+print(process_match(1))
