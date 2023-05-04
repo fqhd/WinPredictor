@@ -2,15 +2,20 @@
   "name": "winpredictor",
   "version": "1.0.0",
   "description": "An AI powered software that predicts a persons chance of winning a league of legends game",
-  "main": "download_match_data.js",
+  "main": "src/download_match_data.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --verbose"
   },
   "keywords": [],
   "author": "",
   "type": "module",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^16.0.3",
     "node-fetch": "^3.3.1"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.21.5",
+    "jest": "^29.5.0"
   }
 }
