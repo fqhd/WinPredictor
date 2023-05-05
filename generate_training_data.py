@@ -27,17 +27,18 @@ def get_champ_vec(champ_name):
 def process_match(match_index):
     with open('data/matches/' + str(match_index) + '.txt', 'r') as f:
         rows = f.read().split('\n')
-        row = ''
+        vec = []
         for j in range(10):
             champ_vec = get_champ_vec(rows[j])
             for e in champ_vec:
-                row += str(float(e))
-                row += ','
+                vec.append(e)
         if rows[10] == 'true':
-            row += '1.0'
+            vec.append(1)
         else:
-            row += '0.0'
-        return row
+            vec.append(0)
+        return vec
 
 
-print(process_match(1))
+a = 0
+for i in range(150000):
+    a += process_match(i)[0]
