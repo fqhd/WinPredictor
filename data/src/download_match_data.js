@@ -3,7 +3,7 @@ import fs from 'fs'
 
 let API_KEYS;
 let TIME_BETWEEN_REQUESTS;
-const NUM_PLAYERS = 5000;
+const NUM_PLAYERS = 150000;
 let currentKey;
 let currentKeyIndex = 0;
 const MATCHES_PER_PLAYER = 50;
@@ -26,7 +26,7 @@ async function getMatchFromMatchID(matchID) {
         return data;
     }
     json.info.participants.forEach(p => {
-        data += p.championName + '\n';
+        data += p.championName + ',';
     });
     data += json.info.participants[0].win;
 	return data;
@@ -53,9 +53,23 @@ async function getPlayerMatchIDs(summonerName) {
 }
 
 async function main() {
-    API_KEYS = fs.readFileSync('keys.txt', {
-        encoding: 'utf-8'
-    }).split('\n');
+    try {
+        API_KEYS = fs.readFileSync('keys.json', {
+            encoding: 'utf-8'
+        });
+        API_KEYS = JSON.parse(API_KEYS);
+    }catch(e) {
+        console.log('Could not find keys.json');
+        console.log('Create a file in the directory of the nodejs project called keys.json and add in a list of riotgames api keys(1 per line)');
+        return;
+    }
+    if(API_KEYS.length == 0) {
+        console.log('No API keys found, please add riot API keys to keys.json(20-30 should be enough), more api keys means faster download');
+        return;
+    }
+    if(API_KEYS.length < 15) {
+        console.log('Warning: Running on low number of API keys, download may take a while');
+    }
     currentKey = API_KEYS[0];
     TIME_BETWEEN_REQUESTS = 1300 / API_KEYS.length;
     const response = await apiCall(`https://euw1.api.riotgames.com/lol/league/v4/masterleagues/by-queue/RANKED_SOLO_5x5?api_key=`);
@@ -79,7 +93,7 @@ async function main() {
         if(matchData == '') {
             continue;
         }
-        fs.writeFileSync('matches/' + i + '.txt', matchData);
+        fs.appendFileSync('matches/training_data.txt', matchData + '\n');
         currentKeyIndex++;
         currentKey = API_KEYS[currentKeyIndex % API_KEYS.length];
         console.log(i);
