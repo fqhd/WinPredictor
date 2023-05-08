@@ -1,6 +1,7 @@
 import { useState } from "react";
 import ChampionSelector from "./ChampionSelector";
 import champions from "./champions.json"
+import predict from "./WinPredictor";
 
 const lanes = ["top.png", "jungle.png", "mid.png", "bot.png", "support.png"]
 
@@ -23,10 +24,11 @@ export default function App() {
           <p>Your mother told me that you have {(pred*100).toFixed(2)}% of getting bitches.</p>
           <input className="champ-filter" type="text" placeholder="Search for champions" onChange={(e) => setFilter(e.target.value)} />
 
-          <button className="domagicstuffbutton" onClick={() => {
+          <button className="domagicstuffbutton" onClick={async () => {
+            const result = await predict(selectedChampions);
             // magic
-            setPred(Math.random())
-          }}>Hello</button>
+            setPred(result);
+          }}>Predict</button>
         </div>
         <ChampionSelector filter={filter} selectedChampions={selectedChampions} setSelectedChampions={setSelectedChampions} />
       </div>
