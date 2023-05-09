@@ -22,7 +22,7 @@
     display: flex;
     width: 70%;
     height: 700px;
-    overflow-y: auto;
+    overflow-y: hidden;
     flex-wrap: wrap;
     align-content: flex-start;
     gap: 15px;
@@ -43,9 +43,17 @@
 }
 
 .champ-filter {
-    margin-bottom: 10px;
     padding: 5px 10px;
     outline: none;
+}
+
+.feedback {
+    display: flex;
+    flex-direction: column;
+    align-content: space-between;
+    justify-content: space-between;
+    height: 120px;
+    margin-bottom: 30px;
 }
 
 .champ-show {
@@ -53,6 +61,7 @@
     flex-direction: column;
     gap: 20px;
     padding: 30px;
+    justify-content: center;
 }
 
 .champ-area {

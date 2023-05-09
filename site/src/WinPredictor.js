@@ -9,5 +9,6 @@ export default async function predict(champions) {
     }
     const X = tf.tensor([inputs]);
     const result = model.predict(X);
-    result.print();
+    const prediction = await result.data();
+    return prediction[0];
 }

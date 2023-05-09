@@ -20,8 +20,8 @@ export default function App() {
         ))}
       </div>
       <div className="champ-area">
-        <div>
-          <p>Your mother told me that you have {(pred*100).toFixed(2)}% of getting bitches.</p>
+        <div className="feedback">
+          <p>You have a {(pred*100).toFixed(2)}% chance of winning this game.</p>
           <input className="champ-filter" type="text" placeholder="Search for champions" onChange={(e) => setFilter(e.target.value)} />
 
           <button className="domagicstuffbutton" onClick={async () => {
