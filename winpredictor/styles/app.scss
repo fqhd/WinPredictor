@@ -37,3 +37,16 @@
         transform: scaleX(var(--header-link-after-scale));
     }
 }
+
+::-webkit-scrollbar {
+    width: 5px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgb(18, 25, 71);
+}
+
+::-webkit-scrollbar-thumb {
+    background:rgb(87, 87, 87);
+    border-radius: 5px;
+}

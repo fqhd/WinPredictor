@@ -33,13 +33,16 @@ export default function Header() {
 
     return (
         <Flex
-            width="100vw"
+            width="100%"
             height="5em"
             p={3}
             background="blackAlpha.800"
             borderBottom={`3px solid ${colors.background.blue}`}
             justifyContent={"space-between"}
             alignItems="center"
+            position="sticky"
+            top="0"
+            zIndex={999}
         >
             <HStack gap={5}>
                 <Image
@@ -49,8 +52,8 @@ export default function Header() {
                     onClick={() => router.push("/")}
                     height="3.5em"
                 />
-                <HeaderLink to={"/"} isActive={location.pathname == "/"}>Predict</HeaderLink>
-                <HeaderLink to={"/about"} isActive={location.pathname.includes("about")}>About</HeaderLink>
+                <HeaderLink to={"/"} isActive={router.pathname == "/"}>Predict</HeaderLink>
+                <HeaderLink to={"/about"} isActive={router.pathname.includes("about")}>About</HeaderLink>
             </HStack>
 
         </Flex>
