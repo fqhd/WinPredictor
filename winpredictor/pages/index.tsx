@@ -1,6 +1,6 @@
 import ChampionSelector from "@/components/ChampionSelector";
 import BaseLayout from "@/components/layouts/BaseLayout";
-import { Alert, AlertIcon, Button, Grid, GridItem, Input, InputGroup, InputRightAddon, chakra, ScaleFade, Text } from "@chakra-ui/react";
+import { Alert, AlertIcon, Button, Grid, GridItem, Input, InputGroup, InputRightAddon, chakra, ScaleFade, Text, InputLeftAddon } from "@chakra-ui/react";
 import { useState } from "react";
 import champions from "../src/champions.json"
 import { FilterChampion } from "@/src/utils";
@@ -38,6 +38,20 @@ export default function Index() {
           padding={5}
         >
           <InputGroup>
+            <InputLeftAddon
+              as={Button}
+              background="red"
+              _hover={{
+                background: "darkred"
+              }}
+              onClick={() => {
+                setSelectedChampions([])
+                setPrediction(null)
+              }}
+            >
+              Clear
+            </InputLeftAddon>
+
             <Input
               variant="flushed"
               background="gray.200"
@@ -48,11 +62,15 @@ export default function Index() {
                 color: "blackAlpha.700"
               }}
               onChange={e => setFilter(e.target.value)}
+              value={filter}
               onKeyDown={(e) => {
                 if (e.key != "Enter") return
 
                 const champion = Object.keys(champions).filter(champion => FilterChampion(filter, champion)).at(0)
                 if (!champion) return
+
+                // @ts-ignore
+                setFilter("")
 
                 if (selectedChampions.includes(champion)) {
                   setSelectedChampions(selectedChampions.filter(champ => champ != champion))
@@ -97,7 +115,7 @@ export default function Index() {
                 <AlertIcon />
                 <Text>
                   The <chakra.span color={prediction > 0.5 ? "aqua" : "tomato"} fontWeight="bold">{prediction > 0.5 ? "BLUE" : "RED"}</chakra.span> team has {
-                    prediction > 0.5 ? (prediction*100).toFixed(2) : ((1-prediction)*100).toFixed(2)
+                    prediction > 0.5 ? (prediction * 100).toFixed(2) : ((1 - prediction) * 100).toFixed(2)
                   }% chance to win the game!
                 </Text>
               </Alert>

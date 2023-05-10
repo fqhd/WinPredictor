@@ -2,6 +2,11 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import * as tf from "@tensorflow/tfjs"
 import champVector from "../../src/champVector.json"
 
+const predLimit = {
+  uses: 0,
+  lastClear: new Date()
+}
+
 type Data = {
   prediction: number
 }
@@ -21,6 +26,18 @@ export default async function predictionHandler(req: NextApiRequest, res: NextAp
     if (!(champion in champVector)) {
       return res.status(400).json(`champion ${champion} not found`)
     }
+  }
+
+  const msTimeDiff = new Date().getTime() - predLimit.lastClear.getTime()
+
+  if(msTimeDiff < 60000 && predLimit.uses >= 50) {
+    return res.status(429).json(`too many requests, try again in ${(60 - msTimeDiff/1000).toFixed(1)}s`)
+  }
+
+  predLimit.uses++
+  if(msTimeDiff > 60000) {
+    predLimit.lastClear = new Date()
+    predLimit.uses = 0
   }
 
   const model = await tf.loadLayersModel(`http://${req.headers.host}/model/v1.json`);
