@@ -1,4 +1,4 @@
-import { Box, Flex, Text, useToast } from "@chakra-ui/react";
+import { Box, Flex, Text } from "@chakra-ui/react";
 import champions from "../src/champions.json"
 import { FilterChampion } from "@/src/utils";
 
@@ -9,10 +9,6 @@ type ChampionSelectorProps = {
 }
 
 export default function ChampionSelector(props: ChampionSelectorProps) {
-    const toast = useToast({
-        status: "success",
-        isClosable: true
-    })
 
     return (
         <Flex
@@ -45,22 +41,10 @@ export default function ChampionSelector(props: ChampionSelectorProps) {
                                 onClick={() => {
                                     if(props.selectedChampions.includes(champion)) {
                                         props.setSelectedChampions(props.selectedChampions.filter(champ => champ != champion))
-                                        toast({
-                                            description: <Text>Removed <strong>{champion}</strong> from the team builder!</Text>
-                                        })
                                     }
                                     else {
                                         if(props.selectedChampions.length < 10) {
                                             props.setSelectedChampions([...props.selectedChampions, champion])
-                                            toast({
-                                                description: <Text>Added <strong>{champion}</strong> to the team builder!</Text>
-                                            })
-                                        }
-                                        else {
-                                            toast({
-                                                status: "warning",
-                                                description: "You can only choose 10 champions!"
-                                            })
                                         }
                                     }
                                 }}

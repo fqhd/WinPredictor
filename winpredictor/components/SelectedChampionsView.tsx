@@ -1,4 +1,4 @@
-import { Box, Flex, Heading, Image, Text, VStack, useToast, chakra } from "@chakra-ui/react"
+import { Box, Flex, Heading, Image, Text, VStack, chakra } from "@chakra-ui/react"
 import champions from "../src/champions.json"
 
 type SelectedChampionsViewProps = {
@@ -10,10 +10,6 @@ type SelectedChampionsViewProps = {
 export const lanes = ["top.png", "jungle.png", "mid.png", "bot.png", "support.png"]
 
 export default function SelectedChampionsView({ selectedChampions, isRedTeam, setSelectedChampions }: SelectedChampionsViewProps) {
-  const toast = useToast({
-    status: "success"
-  })
-
   const team = isRedTeam ? "red" : "blue"
 
   return (
@@ -56,9 +52,6 @@ export default function SelectedChampionsView({ selectedChampions, isRedTeam, se
             onClick={() => {
               if (champion) {
                 setSelectedChampions(selectedChampions.filter(champ => champ != champion))
-                toast({
-                  description: <Text>Removed <strong>{champion}</strong> from the team builder!</Text>
-                })
               }
             }}
           >

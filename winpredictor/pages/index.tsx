@@ -1,6 +1,6 @@
 import ChampionSelector from "@/components/ChampionSelector";
 import BaseLayout from "@/components/layouts/BaseLayout";
-import { Button, Grid, GridItem, Input, InputGroup, InputRightAddon, InputRightElement, Text, useToast } from "@chakra-ui/react";
+import { Alert, AlertIcon, Button, Grid, GridItem, Input, InputGroup, InputRightAddon, chakra, ScaleFade, Text } from "@chakra-ui/react";
 import { useState } from "react";
 import champions from "../src/champions.json"
 import { FilterChampion } from "@/src/utils";
@@ -12,11 +12,6 @@ export default function Index() {
 
   const [loading, setLoading] = useState<boolean>(false)
   const [prediction, setPrediction] = useState<number | null>(null)
-
-  const toast = useToast({
-    status: "success",
-    isClosable: true
-  })
 
   return (
     <BaseLayout>
@@ -61,22 +56,10 @@ export default function Index() {
 
                 if (selectedChampions.includes(champion)) {
                   setSelectedChampions(selectedChampions.filter(champ => champ != champion))
-                  toast({
-                    description: <Text>Removed <strong>{champion}</strong> from the team builder!</Text>
-                  })
                 }
                 else {
                   if (selectedChampions.length < 10) {
                     setSelectedChampions([...selectedChampions, champion])
-                    toast({
-                      description: <Text>Added <strong>{champion}</strong> to the team builder!</Text>
-                    })
-                  }
-                  else {
-                    toast({
-                      status: "warning",
-                      description: "You can only choose 10 champions!"
-                    })
                   }
                 }
               }}
@@ -89,10 +72,16 @@ export default function Index() {
                 background: "darkgreen"
               }}
               isLoading={loading}
-              onClick={async() => {
+              onClick={async () => {
                 setLoading(true)
                 try {
-                  
+                  if (selectedChampions.length != 10) return
+
+                  const res = await fetch("/api/predict?champions=" + selectedChampions.map(champ => champ.trim()).join(","))
+
+                  const data = await res.json()
+
+                  setPrediction(data.prediction)
                 } finally {
                   setLoading(false)
                 }
@@ -101,6 +90,19 @@ export default function Index() {
               Predict
             </InputRightAddon>
           </InputGroup>
+
+          {prediction && (
+            <ScaleFade in={prediction != null} initialScale={0.4} delay={.2}>
+              <Alert status={"success"} marginTop={2}>
+                <AlertIcon />
+                <Text>
+                  The <chakra.span color={prediction > 0.5 ? "aqua" : "tomato"} fontWeight="bold">{prediction > 0.5 ? "BLUE" : "RED"}</chakra.span> team has {
+                    prediction > 0.5 ? (prediction*100).toFixed(2) : ((1-prediction)*100).toFixed(2)
+                  }% chance to win the game!
+                </Text>
+              </Alert>
+            </ScaleFade>
+          )}
 
           <ChampionSelector filter={filter} selectedChampions={selectedChampions} setSelectedChampions={setSelectedChampions} />
         </GridItem>
