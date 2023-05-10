@@ -12,6 +12,7 @@ export default function Index() {
 
   const [loading, setLoading] = useState<boolean>(false)
   const [prediction, setPrediction] = useState<number | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   return (
     <BaseLayout>
@@ -47,6 +48,7 @@ export default function Index() {
               onClick={() => {
                 setSelectedChampions([])
                 setPrediction(null)
+                setError(null)
               }}
             >
               Clear
@@ -92,12 +94,16 @@ export default function Index() {
               isLoading={loading}
               onClick={async () => {
                 setLoading(true)
+                setError(null)
                 try {
                   if (selectedChampions.length != 10) return
 
                   const res = await fetch("/api/predict?champions=" + selectedChampions.map(champ => champ.trim()).join(","))
-
                   const data = await res.json()
+
+                  if(res.status != 200) {
+                    setError(data)
+                  }
 
                   setPrediction(data.prediction)
                 } finally {
@@ -117,6 +123,16 @@ export default function Index() {
                   The <chakra.span color={prediction > 0.5 ? "aqua" : "tomato"} fontWeight="bold">{prediction > 0.5 ? "BLUE" : "RED"}</chakra.span> team has {
                     prediction > 0.5 ? (prediction * 100).toFixed(2) : ((1 - prediction) * 100).toFixed(2)
                   }% chance to win the game!
+                </Text>
+              </Alert>
+            </ScaleFade>
+          )}
+          {error && (
+            <ScaleFade in={error != null} initialScale={0.4} delay={.2}>
+              <Alert status={"error"} marginTop={2}>
+                <AlertIcon />
+                <Text>
+                  <strong>Error:</strong> {error}
                 </Text>
               </Alert>
             </ScaleFade>
