@@ -38,6 +38,7 @@ export default function Index() {
             _placeholder={{
               color: "blackAlpha.700"
             }}
+            onChange={e => setFilter(e.target.value)}
           />
 
           <ChampionSelector filter={filter} selectedChampions={selectedChampions} setSelectedChampions={setSelectedChampions} />

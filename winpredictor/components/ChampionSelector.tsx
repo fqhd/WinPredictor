@@ -1,5 +1,6 @@
 import { Box, Flex, Image, Text, useToast } from "@chakra-ui/react";
 import champions from "../src/champions.json"
+import { FilterChampion } from "@/src/utils";
 
 type ChampionSelectorProps = {
     filter: string
@@ -23,11 +24,12 @@ export default function ChampionSelector(props: ChampionSelectorProps) {
             overflowY={"auto"}
             minHeight="400px"
             height="75vh"
+            alignContent="start"
         >
 
             {
                 Object.keys(champions)
-                    .filter(champion => champion.replace(" ", "").toLowerCase().includes(props.filter.toLowerCase().replace(" ", "")))
+                    .filter(champion => FilterChampion(props.filter, champion))
                     .map(champion => {
                         // @ts-ignore
                         const champSrc = champions[champion]
