@@ -9,8 +9,9 @@ export default function Header() {
             height="5em"
             background="blackAlpha.800"
             borderBottom={`3px solid ${colors.background.blue}`}
+            justifyContent={"space-between"}
         >
-
+            
         </Flex>
     )
 }
