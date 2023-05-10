@@ -10,7 +10,6 @@ type ChampionSelectorProps = {
 
 export default function ChampionSelector(props: ChampionSelectorProps) {
     const toast = useToast({
-        position: "top-right",
         status: "success",
         isClosable: true
     })
