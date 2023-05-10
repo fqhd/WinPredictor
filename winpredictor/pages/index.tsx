@@ -1,6 +1,6 @@
 import ChampionSelector from "@/components/ChampionSelector";
 import BaseLayout from "@/components/layouts/BaseLayout";
-import {  Grid, GridItem, Input, Text, useToast } from "@chakra-ui/react";
+import { Button, Grid, GridItem, Input, InputGroup, InputRightAddon, InputRightElement, Text, useToast } from "@chakra-ui/react";
 import { useState } from "react";
 import champions from "../src/champions.json"
 import { FilterChampion } from "@/src/utils";
@@ -9,6 +9,9 @@ import SelectedChampionsView from "@/components/SelectedChampionsView";
 export default function Index() {
   const [filter, setFilter] = useState<string>("")
   const [selectedChampions, setSelectedChampions] = useState<string[]>([])
+
+  const [loading, setLoading] = useState<boolean>(false)
+  const [prediction, setPrediction] = useState<number | null>(null)
 
   const toast = useToast({
     status: "success",
@@ -39,44 +42,65 @@ export default function Index() {
           backgroundPosition={"center center"}
           padding={5}
         >
-          <Input
-            variant="flushed"
-            background="gray.200"
-            color="gray.900"
-            paddingX="10px"
-            placeholder="Search for champions..."
-            _placeholder={{
-              color: "blackAlpha.700"
-            }}
-            onChange={e => setFilter(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key != "Enter") return
+          <InputGroup>
+            <Input
+              variant="flushed"
+              background="gray.200"
+              color="gray.900"
+              paddingX="10px"
+              placeholder="Search for champions..."
+              _placeholder={{
+                color: "blackAlpha.700"
+              }}
+              onChange={e => setFilter(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key != "Enter") return
 
-              const champion = Object.keys(champions).filter(champion => FilterChampion(filter, champion)).at(0)
-              if (!champion) return
+                const champion = Object.keys(champions).filter(champion => FilterChampion(filter, champion)).at(0)
+                if (!champion) return
 
-              if (selectedChampions.includes(champion)) {
-                setSelectedChampions(selectedChampions.filter(champ => champ != champion))
-                toast({
-                  description: <Text>Removed <strong>{champion}</strong> from the team builder!</Text>
-                })
-              }
-              else {
-                if (selectedChampions.length < 10) {
-                  setSelectedChampions([...selectedChampions, champion])
+                if (selectedChampions.includes(champion)) {
+                  setSelectedChampions(selectedChampions.filter(champ => champ != champion))
                   toast({
-                    description: <Text>Added <strong>{champion}</strong> to the team builder!</Text>
+                    description: <Text>Removed <strong>{champion}</strong> from the team builder!</Text>
                   })
                 }
                 else {
-                  toast({
-                    status: "warning",
-                    description: "You can only choose 10 champions!"
-                  })
+                  if (selectedChampions.length < 10) {
+                    setSelectedChampions([...selectedChampions, champion])
+                    toast({
+                      description: <Text>Added <strong>{champion}</strong> to the team builder!</Text>
+                    })
+                  }
+                  else {
+                    toast({
+                      status: "warning",
+                      description: "You can only choose 10 champions!"
+                    })
+                  }
                 }
-              }
-            }}
-          />
+              }}
+            />
+
+            <InputRightAddon
+              as={Button}
+              background="green"
+              _hover={{
+                background: "darkgreen"
+              }}
+              isLoading={loading}
+              onClick={async() => {
+                setLoading(true)
+                try {
+                  
+                } finally {
+                  setLoading(false)
+                }
+              }}
+            >
+              Predict
+            </InputRightAddon>
+          </InputGroup>
 
           <ChampionSelector filter={filter} selectedChampions={selectedChampions} setSelectedChampions={setSelectedChampions} />
         </GridItem>
@@ -87,7 +111,6 @@ export default function Index() {
         >
           <SelectedChampionsView selectedChampions={selectedChampions} setSelectedChampions={setSelectedChampions} isRedTeam />
         </GridItem>
-
       </Grid>
     </BaseLayout>
   )
