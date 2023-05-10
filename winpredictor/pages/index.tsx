@@ -34,7 +34,9 @@ export default function Index() {
         <GridItem
           colSpan={6}
           rowSpan={1}
-          background="gray.700"
+          // background="gray.700"
+          backgroundImage="linear-gradient(rgba(0, 0, 0, 0.8) 100%, rgba(0, 0, 0, 0.8) 0%), url(/assets/banners/select.jpg)"
+          backgroundPosition={"center center"}
           padding={5}
         >
           <Input

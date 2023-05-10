@@ -1,4 +1,4 @@
-import { Flex, Image, Text, VStack, useToast } from "@chakra-ui/react"
+import { Box, Flex, Heading, Image, Text, VStack, useToast, chakra } from "@chakra-ui/react"
 import champions from "../src/champions.json"
 
 type SelectedChampionsViewProps = {
@@ -14,10 +14,27 @@ export default function SelectedChampionsView({ selectedChampions, isRedTeam, se
     status: "success"
   })
 
+  const team = isRedTeam ? "red" : "blue"
+
   return (
     <VStack
       gap={3}
     >
+      <Box
+        backgroundImage={`linear-gradient(rgba(0, 0, 0, 0.6) 100%, rgba(0, 0, 0, 0.6) 0%), url(/assets/banners/${team}_team_show.jpg)`}
+        backgroundPosition={"200px"}
+        paddingX={10}
+        paddingY={5}
+        rounded="70px"
+        boxShadow="xl"
+      >
+        <Heading
+          textTransform={"uppercase"}
+        >
+          <chakra.span color={isRedTeam ? "tomato" : "aqua"}>{team}</chakra.span> team
+        </Heading>
+      </Box>
+
       {lanes.map((lane, index) => {
         const champion = selectedChampions.at(!isRedTeam ? index : index + 5)
         // @ts-ignore
