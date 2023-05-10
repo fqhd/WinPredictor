@@ -1,4 +1,5 @@
 import { Flex } from "@chakra-ui/react"
+import Head from "next/head"
 import { ReactNode } from "react"
 
 export type BaseLayoutProps = {
@@ -15,7 +16,9 @@ export default function BaseLayout(props: BaseLayoutProps) {
             width="100vw"
             minHeight="100vh"
         >
-        
+            <Head>
+                {props.title && <title>{props.title} - LoL WinPredictor</title>}
+            </Head>
         </Flex>
     )
 
