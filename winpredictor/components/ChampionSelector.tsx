@@ -1,4 +1,4 @@
-import { Box, Flex, Image, Text, useToast } from "@chakra-ui/react";
+import { Box, Flex, Text, useToast } from "@chakra-ui/react";
 import champions from "../src/champions.json"
 import { FilterChampion } from "@/src/utils";
 

@@ -1,11 +1,10 @@
 import ChampionSelector from "@/components/ChampionSelector";
 import BaseLayout from "@/components/layouts/BaseLayout";
-import { Box, Flex, Grid, GridItem, Image, Input, Text, VStack, useToast } from "@chakra-ui/react";
+import {  Grid, GridItem, Input, Text, useToast } from "@chakra-ui/react";
 import { useState } from "react";
 import champions from "../src/champions.json"
 import { FilterChampion } from "@/src/utils";
-
-const lanes = ["top.png", "jungle.png", "mid.png", "bot.png", "support.png"]
+import SelectedChampionsView from "@/components/SelectedChampionsView";
 
 export default function Index() {
   const [filter, setFilter] = useState<string>("")
@@ -29,39 +28,7 @@ export default function Index() {
           colSpan={2}
           rowSpan={1}
         >
-          <VStack
-            gap={3}
-          >
-            {lanes.map((lane, index) => {
-              const champion = selectedChampions.at(index)
-              // @ts-ignore
-              const champSrc = champions[champion || ""]
-
-              return (
-                <Flex
-                  key={`${lane}-${champion}-blue`}
-                  background="gray.700"
-                  rounded="full"
-                  boxSize="70px"
-                  justifyContent="center"
-                  alignItems="center"
-                  userSelect={"none"}
-                  className="champion-icon-select"
-                  cursor="pointer"
-                  backgroundImage={champion ? `/assets/champions/${champSrc}` : "unset"}
-                  backgroundSize={"contain"}
-                >
-                  <Image
-                    draggable={false}
-                    alt={`Blue ${lane} ${champSrc}`}
-                    src={`/assets/lanes/${lane}`}
-                    height="40px"
-                    display={champion ? "none" : "unset"}
-                  />
-                </Flex>
-              )
-            })}
-          </VStack>
+          <SelectedChampionsView selectedChampions={selectedChampions} setSelectedChampions={setSelectedChampions} />
         </GridItem>
 
         <GridItem
@@ -116,39 +83,7 @@ export default function Index() {
           colSpan={2}
           rowSpan={1}
         >
-          <VStack
-            gap={3}
-          >
-            {lanes.map((lane, index) => {
-              const champion = selectedChampions.at(index+5)
-              // @ts-ignore
-              const champSrc = champions[champion || ""]
-
-              return (
-                <Flex
-                  key={`${lane}-${champion}-blue`}
-                  background="gray.700"
-                  rounded="full"
-                  boxSize="70px"
-                  justifyContent="center"
-                  alignItems="center"
-                  userSelect={"none"}
-                  className="champion-icon-select"
-                  cursor="pointer"
-                  backgroundImage={champion ? `/assets/champions/${champSrc}` : "unset"}
-                  backgroundSize={"contain"}
-                >
-                  <Image
-                    draggable={false}
-                    alt={`Blue ${lane} ${champSrc}`}
-                    src={`/assets/lanes/${lane}`}
-                    height="40px"
-                    display={champion ? "none" : "unset"}
-                  />
-                </Flex>
-              )
-            })}
-          </VStack>
+          <SelectedChampionsView selectedChampions={selectedChampions} setSelectedChampions={setSelectedChampions} isRedTeam />
         </GridItem>
 
       </Grid>
