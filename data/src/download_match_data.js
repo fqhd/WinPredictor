@@ -1,25 +1,15 @@
 import 'node-fetch';
+import { config } from 'dotenv';
 import fs from 'fs'
+config();
 
 let API_KEYS;
-let TIME_BETWEEN_REQUESTS;
+
 const NUM_PLAYERS = 150000;
-let currentKey;
-let currentKeyIndex = 0;
 const MATCHES_PER_PLAYER = 50;
 
-export function apiCall(url) {
-	url += currentKey;
-	return new Promise((resolve, reject) => {
-		setTimeout(async () => {
-			const data = await fetch(url);
-			resolve(data);
-		}, TIME_BETWEEN_REQUESTS);
-	});
-}
-
 async function getMatchFromMatchID(matchID) {
-	const response = await apiCall(`https://europe.api.riotgames.com/lol/match/v5/matches/${matchID}?api_key=`);
+	const response = await fetch(`https://europe.api.riotgames.com/lol/match/v5/matches/${matchID}?api_key=${process.env.RIOT_KEY}`);
 	const json = await response.json();
     let data = '';
     if(json['info'] == undefined) {
@@ -36,14 +26,14 @@ async function getPlayerMatchIDs(summonerName) {
 	console.log('checking player: ' + summonerName);
 	summonerName = encodeURIComponent(summonerName);
 	try{
-		const response = await apiCall(`https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${summonerName}?api_key=`);
+		const response = await fetch(`https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${summonerName}?api_key=${process.env.RIOT_KEY}`);
 		const player = await response.json();
         if(player['id'] == undefined) {
 		    console.log('Error, summoner not found: ' + summonerName);
             return [];
         }
 		const puuid = player.puuid;
-		const resp = await apiCall(`https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=${MATCHES_PER_PLAYER}&api_key=`);
+		const resp = await fetch(`https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=${MATCHES_PER_PLAYER}&api_key=${process.env.RIOT_KEY}`);
 		const matchIDs = await resp.json();
 		return matchIDs;
 	}catch(error){
@@ -52,7 +42,41 @@ async function getPlayerMatchIDs(summonerName) {
 	}
 }
 
+async function getMatchesFromPlayers(players) {
+
+}
+
+async function getPlayersFromTier(tier) {
+    if(tier == 'grandmaster') {
+        let response = await fetch(`https://euw1.api.riotgames.com/lol/league/v4/grandmasterleagues/by-queue/RANKED_SOLO_5x5?api_key=${process.env.RIOT_KEY}`);
+        let json = await response.json();
+        const gmplayers = json.entries;
+        response = await fetch(`https://euw1.api.riotgames.com/lol/league/v4/challengerleagues/by-queue/RANKED_SOLO_5x5?api_key=${process.env.RIOT_KEY}`);
+        json = await response.json();
+        const chplayers = json.entries;
+        return gmplayers.concat(chplayers);
+    }else if(tier == 'master') {
+        const response = await fetch(`https://euw1.api.riotgames.com/lol/league/v4/masterleagues/by-queue/RANKED_SOLO_5x5?api_key=${process.env.RIOT_KEY}`);
+        const json = await response.json();
+        const players = json.entries;
+        return players;
+    }else{
+        let players = [];
+        for(let i = 1; i < 51; i++) {
+            const response = await fetch(`https://euw1.api.riotgames.com/lol/league/v4/entries/RANKED_SOLO_5x5/${tier.toUpperCase()}/III?page=${i}&api_key=${process.env.RIOT_KEY}`)
+            const json = await response.json();
+            players = players.concat(json);
+        }
+        return players;
+    }
+}
+
+async function getMatchesFromTier(tier) {
+
+}
+
 async function main() {
+    /*
     try {
         API_KEYS = fs.readFileSync('keys.json', {
             encoding: 'utf-8'
@@ -70,9 +94,28 @@ async function main() {
     if(API_KEYS.length < 15) {
         console.log('Warning: Running on low number of API keys, download may take a while');
     }
-    currentKey = API_KEYS[0];
-    TIME_BETWEEN_REQUESTS = 1300 / API_KEYS.length;
-    const response = await apiCall(`https://euw1.api.riotgames.com/lol/league/v4/masterleagues/by-queue/RANKED_SOLO_5x5?api_key=`);
+    */
+
+    const players = await getPlayersFromTier('diamond');
+    console.log(players.length);
+
+    /*
+    
+    
+    const tiers = ['challenger', 'grandmaster', 'master', 'diamond', 'platinum', 'gold', 'silver', 'bronze', 'iron'];
+
+    for(let i = 0; i < tiers.length; i++) {
+        const uniqueMatches = getMatchesFromTier(tiers[i]);
+        const uniqueMatchesArray = [...uniqueMatches];
+        for(let i = 0; i < uniqueMatchesArray.length; i++) {
+            const matchData = await getMatchFromMatchID(uniqueMatchesArray[i]);
+            if(matchData == '') {
+                continue;
+            }
+            fs.appendFileSync('matches/training_data.txt', matchData + '\n');
+        }
+    }
+
     const players = await response.json();
     const numPlayers = Math.min(NUM_PLAYERS, players.entries.length);
     console.log(`Processing ${numPlayers} players`);
@@ -86,18 +129,9 @@ async function main() {
         currentKeyIndex++;
         currentKey = API_KEYS[currentKeyIndex % API_KEYS.length];
     }
+    */
 
-    const uniqueMatchesArray = [...uniqueMatches];
-    for(let i = 0; i < uniqueMatchesArray.length; i++) {
-        const matchData = await getMatchFromMatchID(uniqueMatchesArray[i]);
-        if(matchData == '') {
-            continue;
-        }
-        fs.appendFileSync('matches/training_data.txt', matchData + '\n');
-        currentKeyIndex++;
-        currentKey = API_KEYS[currentKeyIndex % API_KEYS.length];
-        console.log(i);
-    }
+    
 }
 
 main();
