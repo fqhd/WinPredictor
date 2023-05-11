@@ -30,7 +30,6 @@ export default function Train() {
                 backgroundImage={DarkOverlayImage("/assets/banners/blue_team_show.jpg")}
                 backgroundPosition="center center"
                 backgroundSize="cover"
-                border="2px solid red"
                 width="80vw"
                 marginX="auto"
                 marginY={10}
@@ -81,6 +80,7 @@ export default function Train() {
                                 setAlert(data)
                             } finally {
                                 setLoading(false)
+                                setGameURL("")
                             }
                         }}
                     >
