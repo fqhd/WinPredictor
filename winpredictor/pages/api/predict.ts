@@ -1,11 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import * as tf from "@tensorflow/tfjs"
 import champVector from "../../src/champVector.json"
+import RateLimitManager from '@/src/RateLimitManager'
 
-const predLimit = {
-  uses: 0,
-  lastClear: new Date()
-}
+const rateLimiter = new RateLimitManager(50, 60)
 
 type Data = {
   prediction: number
@@ -28,16 +26,8 @@ export default async function predictionHandler(req: NextApiRequest, res: NextAp
     }
   }
 
-  const msTimeDiff = new Date().getTime() - predLimit.lastClear.getTime()
-
-  if(msTimeDiff < 60000 && predLimit.uses >= 50) {
-    return res.status(429).json(`too many requests, try again in ${(60 - msTimeDiff/1000).toFixed(1)}s`)
-  }
-
-  predLimit.uses++
-  if(msTimeDiff > 60000) {
-    predLimit.lastClear = new Date()
-    predLimit.uses = 0
+  if (!rateLimiter.addUse()) {
+    return res.status(429).json(`too many requests, try again in ${rateLimiter.getTimeDifference().toFixed(1)}s`)
   }
 
   const model = await tf.loadLayersModel(`http://${req.headers.host}/model/v1.json`);
