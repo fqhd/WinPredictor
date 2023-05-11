@@ -23,3 +23,7 @@ export async function getAllGames(rank: GameType['rank'] | undefined = undefined
 
     return await GameModel.count(rank ? { rank } : {})
 }
+
+export async function getGameByURL(gameUrl: string) {
+    return await GameModel.findOne({ gameUrl })
+}

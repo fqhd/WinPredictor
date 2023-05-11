@@ -44,8 +44,8 @@ export default function Train() {
                             {alert == true ? "Your game was submitted successfully!" : "Error: " + alert}
                         </Alert>
                     )}
-                    <Text color={"gray.300"} fontSize="12px" width="60%">
-                        {`How does it work? You can submit one of your games and select your rank. Afterwards, we will gather all games submitted by you and other users to train the AI so it can predict the outcome of a game more accurately based on the division. Currently, the game you will submit will train the AI for ${selectedRank.toUpperCase()} games.`}
+                    <Text color={"gray.300"} fontSize="12px" width="80%">
+                        {`How does it work? You can submit one of your games and select your rank. Afterwards, we will gather all games submitted by you and other users to train the AI so it can predict the outcome of a game more accurately based on the division. Currently, the game you will submit will train the AI for ${selectedRank.toUpperCase()} games. Please only submit ranked games! Normal / ARAM / RGM games won't be used to train the AI.`}
                     </Text>
 
                     <Input
