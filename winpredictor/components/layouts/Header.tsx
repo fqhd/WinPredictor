@@ -1,8 +1,8 @@
 import { BrandAssets } from "@/src/BrandAssets";
 import { colors } from "@/styles/app.theme";
-import { Box, Flex, HStack, Image } from "@chakra-ui/react";
+import { Box, Flex, HStack, Image, Text } from "@chakra-ui/react";
 import { useRouter } from "next/router";
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 
 type HeaderLinkProps = {
     children: ReactNode
@@ -30,6 +30,16 @@ function HeaderLink(props: HeaderLinkProps) {
 
 export default function Header() {
     const router = useRouter()
+    const [trainedGames, setTrainedGames] = useState<number>(149980)
+
+    useEffect(() => {
+        const updateGames = async() => {
+            const res = await fetch("/api/getTrainedGames")
+            setTrainedGames(149980 + await res.json())
+        }
+
+        setInterval(updateGames, 5000)
+    })
 
     return (
         <Flex
@@ -54,6 +64,11 @@ export default function Header() {
                 />
                 <HeaderLink to={"/"} isActive={router.pathname == "/"}>Predict</HeaderLink>
                 <HeaderLink to={"/about"} isActive={router.pathname.includes("about")}>About</HeaderLink>
+                <HeaderLink to={"/train"} isActive={router.pathname.includes("train")}>Train</HeaderLink>
+            </HStack>
+
+            <HStack>
+                <Text>Trained on {trainedGames.toLocaleString()} games!</Text>
             </HStack>
 
         </Flex>
