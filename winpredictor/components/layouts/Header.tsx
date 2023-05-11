@@ -54,7 +54,7 @@ export default function Header() {
                 />
                 <HeaderLink to={"/"} isActive={router.pathname == "/"}>Predict</HeaderLink>
                 <HeaderLink to={"/about"} isActive={router.pathname.includes("about")}>About</HeaderLink>
-                <HeaderLink to={"/about"} isActive={router.pathname.includes("train")}>Train</HeaderLink>
+                <HeaderLink to={"/train"} isActive={router.pathname.includes("train")}>Train</HeaderLink>
             </HStack>
 
         </Flex>
