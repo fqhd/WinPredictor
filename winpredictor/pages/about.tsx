@@ -1,4 +1,5 @@
 import BaseLayout from "@/components/layouts/BaseLayout";
+import { DarkOverlayImage } from "@/src/utils";
 import { Box, Button, Divider, Flex, FlexProps, HStack, Heading, Icon, Image, Text, useClipboard } from "@chakra-ui/react";
 
 import { FaGithub, FaDiscord } from "react-icons/fa"
@@ -31,7 +32,7 @@ function ProfileBlock({ github, discord, name, banner, avatar, quote, sub, isMir
             marginX="auto"
             padding={10}
             marginY={3}
-            backgroundImage={`linear-gradient(rgba(0, 0, 0, 0.7) 100%, rgba(0, 0, 0, 0.7) 0%), url(/assets/banners/${banner})`}
+            backgroundImage={DarkOverlayImage(`/assets/banners/${banner}`)}
             backgroundPosition="center center"
             backgroundSize="cover"
             width="80vw"
@@ -101,7 +102,7 @@ export default function About() {
             />
 
             <Box
-                backgroundImage={`linear-gradient(rgba(0, 0, 0, 0.7) 100%, rgba(0, 0, 0, 0.7) 0%), url(/assets/banners/contributors.jpg)`}
+                backgroundImage={DarkOverlayImage("/assets/banners/contributors.jpg", 0.5)}
                 backgroundPosition={"center center"}
                 width="80vw"
                 marginX="auto"

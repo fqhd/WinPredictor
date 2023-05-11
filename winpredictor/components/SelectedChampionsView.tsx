@@ -1,5 +1,6 @@
 import { Box, Flex, Heading, Image, Text, VStack, chakra } from "@chakra-ui/react"
 import champions from "../src/champions.json"
+import { DarkOverlayImage } from "@/src/utils"
 
 type SelectedChampionsViewProps = {
   selectedChampions: string[]
@@ -17,7 +18,7 @@ export default function SelectedChampionsView({ selectedChampions, isRedTeam, se
       gap={3}
     >
       <Box
-        backgroundImage={`linear-gradient(rgba(0, 0, 0, 0.6) 100%, rgba(0, 0, 0, 0.6) 0%), url(/assets/banners/${team}_team_show.jpg)`}
+        backgroundImage={DarkOverlayImage(`/assets/banners/${team}_team_show.jpg`)}
         backgroundPosition={"200px"}
         paddingX={10}
         paddingY={5}

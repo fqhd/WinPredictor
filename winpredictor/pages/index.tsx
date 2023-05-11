@@ -3,7 +3,7 @@ import BaseLayout from "@/components/layouts/BaseLayout";
 import { Alert, AlertIcon, Button, Grid, GridItem, Input, InputGroup, InputRightAddon, chakra, ScaleFade, Text, InputLeftAddon } from "@chakra-ui/react";
 import { useState } from "react";
 import champions from "../src/champions.json"
-import { FilterChampion } from "@/src/utils";
+import { DarkOverlayImage, FilterChampion } from "@/src/utils";
 import SelectedChampionsView from "@/components/SelectedChampionsView";
 
 export default function Index() {
@@ -34,7 +34,7 @@ export default function Index() {
           colSpan={6}
           rowSpan={1}
           // background="gray.700"
-          backgroundImage="linear-gradient(rgba(0, 0, 0, 0.8) 100%, rgba(0, 0, 0, 0.8) 0%), url(/assets/banners/select.jpg)"
+          backgroundImage={DarkOverlayImage("/assets/banners/select.jpg", 0.8)}
           backgroundPosition={"center center"}
           padding={5}
         >
