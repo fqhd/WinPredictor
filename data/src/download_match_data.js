@@ -145,9 +145,12 @@ async function main() {
         console.log('Warning: Running on low number of API keys, download may take a while');
     }
 
-    const tiers = ['diamond', 'platinum', 'gold', 'silver', 'bronze', 'iron'];
-    const matches = getUniqueMatches(await getMatchesFromTier('gold')); // This holds an array of batches of matches, where each batch is API_KEYS.length long
-    await processMatches(matches, 'gold');
+    const tiers = ['bronze', 'iron'];
+
+    for(let i = 0; i < tiers.length; i++) {
+        const matches = getUniqueMatches(await getMatchesFromTier(tiers[i])); // This holds an array of batches of matches, where each batch is API_KEYS.length long
+        await processMatches(matches, tiers[i]);
+    }
 
 }
 
