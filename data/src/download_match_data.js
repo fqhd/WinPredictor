@@ -17,18 +17,19 @@ export function apiCall(url) {
 }
 
 async function getMatchFromMatchID(matchID, key) {
-    const response = await apiCall(`https://europe.api.riotgames.com/lol/match/v5/matches/${matchID}?api_key=${key}`);
-    const json = await response.json();
-    let data = '';
-    if (json['info'] == undefined) {
-        console.log('Looking For Match: info is undefined');
+    try {
+        const response = await apiCall(`https://europe.api.riotgames.com/lol/match/v5/matches/${matchID}?api_key=${key}`);
+        const json = await response.json();
+        const data = '';
+        json.info.participants.forEach(p => {
+            data += p.championName + ',';
+        });
+        data += json.info.participants[0].win;
         return data;
+    }catch(e) {
+        console.log(e);
+        return '';
     }
-    json.info.participants.forEach(p => {
-        data += p.championName + ',';
-    });
-    data += json.info.participants[0].win;
-    return data;
 }
 
 async function getPlayerMatchIDs(summonerName, key) {
