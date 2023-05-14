@@ -20,7 +20,7 @@ async function getMatchFromMatchID(matchID, key) {
     try {
         const response = await apiCall(`https://europe.api.riotgames.com/lol/match/v5/matches/${matchID}?api_key=${key}`);
         const json = await response.json();
-        const data = '';
+        let data = '';
         json.info.participants.forEach(p => {
             data += p.championName + ',';
         });
