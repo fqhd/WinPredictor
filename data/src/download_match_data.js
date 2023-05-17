@@ -16,6 +16,20 @@ export function apiCall(url) {
     });
 }
 
+function calcWinningChance(gameDuration, win) {
+    gameDuration = Math.min(Math.max(gameDuration, 900), 3000);
+    gameDuration -= 900;
+    gameDuration /= 2100;
+    // 0 = 15 minutes or less
+    // 1 = 50 minutes or more
+    gameDuration /= 2;
+    if(win) {
+        return 0.5 + gameDuration;
+    }else{
+        return 0.5 - gameDuration;
+    }
+}
+
 async function getMatchFromMatchID(matchID, key) {
     try {
         const response = await apiCall(`https://europe.api.riotgames.com/lol/match/v5/matches/${matchID}?api_key=${key}`);
@@ -24,8 +38,10 @@ async function getMatchFromMatchID(matchID, key) {
         json.info.participants.forEach(p => {
             data += p.championName + ',';
         });
-        data += json.info.participants[0].win;
-        return data;
+        const gameDuration = json.info.gameDuration;
+        const win = json.info.participants[0].win;
+        const winningChance = calcWinningChance(gameDuration, win);
+        return data+(Math.round(winningChance*1000)/1000);
     }catch(e) {
         console.log(e);
         return '';
@@ -44,7 +60,7 @@ async function getPlayerMatchIDs(summonerName, key) {
             return [];
         }
         const puuid = player.puuid;
-        const resp = await apiCall(`https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=${MATCHES_PER_PLAYER}&api_key=${key}`);
+        const resp = await apiCall(`https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?queue=420&start=0&count=${MATCHES_PER_PLAYER}&api_key=${key}`);
         const matchIDs = await resp.json();
         return matchIDs;
     } catch (error) {
@@ -146,7 +162,7 @@ async function main() {
         console.log('Warning: Running on low number of API keys, download may take a while');
     }
 
-    const tiers = ['bronze', 'iron'];
+    const tiers = ['diamond'];
 
     for(let i = 0; i < tiers.length; i++) {
         const matches = getUniqueMatches(await getMatchesFromTier(tiers[i])); // This holds an array of batches of matches, where each batch is API_KEYS.length long
