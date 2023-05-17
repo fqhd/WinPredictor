@@ -1,4 +1,6 @@
 import pandas as pd
+import tensorflow as tf
+import pickle
 
 df = pd.read_csv('champions.csv')
 
@@ -24,21 +26,32 @@ def get_champ_vec(champ_name):
             arr.append(row[i] / 10)
     return arr
 
-def process_match(match_index):
-    with open('data/matches/' + str(match_index) + '.txt', 'r') as f:
-        rows = f.read().split('\n')
-        vec = []
-        for j in range(10):
-            champ_vec = get_champ_vec(rows[j])
-            for e in champ_vec:
-                vec.append(e)
-        if rows[10] == 'true':
-            vec.append(1)
-        else:
-            vec.append(0)
-        return vec
+def process_match(match):
+    champs = match.split(',')
+    vec = []
+    for i in range(10):
+        champ_vec = get_champ_vec(champs[i])
+        for e in champ_vec:
+            vec.append(e)
+    if champs[10] == 'true':
+        vec.append(1)
+    else:
+        vec.append(0)
+    return vec
 
+ranks = ['master', 'diamond', 'platinum', 'gold', 'silver', 'bronze', 'iron']
 
-a = 0
-for i in range(150000):
-    a += process_match(i)[0]
+for name in ranks:
+    with open('data/matches/' + name + '_training_data.txt', 'r') as f, open('data/matches/' + name + '.ds', 'wb') as f_out:
+        inputs = []
+        labels = []
+        matches = f.read().split('\n')
+        for m in matches:
+            try:
+                match_vec = process_match(m)
+                inputs.append(match_vec[:-1])
+                labels.append(match_vec[-1])
+            except:
+                pass
+        training_data = tf.constant(inputs), tf.constant(labels)
+        pickle.dump(training_data, f_out)
