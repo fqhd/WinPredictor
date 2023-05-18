@@ -33,25 +33,29 @@ def process_match(match):
         champ_vec = get_champ_vec(champs[i])
         for e in champ_vec:
             vec.append(e)
-    if champs[10] == 'true':
-        vec.append(1)
-    else:
-        vec.append(0)
+    vec.append(float(champs[10]))
     return vec
 
-ranks = ['master', 'diamond', 'platinum', 'gold', 'silver', 'bronze', 'iron']
+ranks = ['diamond']
+
 
 for name in ranks:
     with open('data/matches/' + name + '_training_data.txt', 'r') as f, open('data/matches/' + name + '.ds', 'wb') as f_out:
         inputs = []
         labels = []
         matches = f.read().split('\n')
-        for m in matches:
+        droppedCount = 0
+        for i in range(len(matches)):
             try:
-                match_vec = process_match(m)
+                match_vec = process_match(matches[i])
                 inputs.append(match_vec[:-1])
                 labels.append(match_vec[-1])
             except:
+                droppedCount += 1
                 pass
-        training_data = tf.constant(inputs), tf.constant(labels)
+            if i % 10000 == 0:
+                prog = int(i/len(matches)*100)
+                print(f'Progress: {prog}%')
+        print(f'Dropped Games: {droppedCount}')
+        training_data = tf.constant(inputs, dtype='float32'), tf.constant(labels)
         pickle.dump(training_data, f_out)
