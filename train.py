@@ -4,7 +4,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras import losses
 from tensorflow.keras import optimizers
-import tensorboard
+from tensorflow.keras.callbacks import TensorBoard
 print(tf.config.list_physical_devices('GPU'))
 
 BATCH_SIZE = 32
@@ -33,7 +33,7 @@ def create_model():
 
 def compile_and_fit(model, name, training_data):
 	(train_x, train_y), _ = training_data
-	optimizer = optimizers.Adam(learning_rate=LR)
+	optimizer = optimizers.legacy.Adam(learning_rate=LR)
 	loss = losses.MeanAbsoluteError()
 	model.compile(loss=loss, optimizer=optimizer)
 	model.fit(train_x, train_y, batch_size=BATCH_SIZE, validation_split=0.01, epochs=200, callbacks=[TensorBoard(log_dir=f'logs/{name}')])
@@ -42,6 +42,7 @@ def train_model_rank(rank):
 	data = get_training_data(rank)
 	model = create_model()
 	compile_and_fit(model, rank, data)
+	model.save(f'models/{rank}.h5')
 
 def main():
 	ranks = ['grandmaster', 'master', 'diamond', 'platinum', 'gold', 'silver', 'bronze', 'iron']
