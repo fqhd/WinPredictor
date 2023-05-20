@@ -36,8 +36,7 @@ def process_match(match):
     vec.append(float(champs[10]))
     return vec
 
-ranks = ['diamond']
-
+ranks = ['grandmaster', 'master', 'diamond', 'platinum', 'gold', 'silver', 'bronze', 'iron']
 
 for name in ranks:
     with open('data/matches/' + name + '_training_data.txt', 'r') as f, open('data/matches/' + name + '.ds', 'wb') as f_out:
