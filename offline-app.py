@@ -10,7 +10,7 @@ class OfflinePredictor:
 		self.df = pd.read_csv('champions.csv')
 
 	def get_champ(self, champs_to_exclude, role):
-		name = input(f'Enter {role}:')
+		name = input(f'Enter {role}: ')
 		if not name in self.df.values:
 			print('Champion does not exist')
 			return self.get_champ(champs_to_exclude, role)
@@ -60,10 +60,10 @@ class OfflinePredictor:
 	def pick_rank(self):
 		for i, r in enumerate(ranks.ranks):
 			print(f'{i+1}) {r}')
-		rIdx = input('Select a rank:')
+		rIdx = input('Select a rank: ')
 		while not self.is_valid_input(rIdx):
 			print('Invalid rank, try again')
-			rIdx = input('Select a rank:')
+			rIdx = input('Select a rank: ')
 		return ranks.ranks[int(rIdx)-1]
 
 	def run(self):
@@ -72,8 +72,8 @@ class OfflinePredictor:
 		inputs = []
 		for i in champs:
 			inputs += self.get_champ_vec(i)
-		print('Rank:', rank)
-		print('Inputs:', inputs)
+		prediction = self.models[rank].predict([inputs], verbose=0)
+		print(f'Blue team chance of winning: ', int(prediction*10000)/100)
 
 predictor = OfflinePredictor()
 predictor.run()
