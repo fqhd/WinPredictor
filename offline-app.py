@@ -1,8 +1,12 @@
 import tensorflow as tf
 import pandas as pd
+import ranks
 
 class OfflinePredictor:
 	def __init__(self):
+		self.models = {}
+		for rank in ranks.ranks:
+			self.models[rank] = tf.keras.models.load_model(f'models/{rank}.h5')
 		self.df = pd.read_csv('champions.csv')
 
 	def get_champ(self, champs_to_exclude):
@@ -53,14 +57,13 @@ class OfflinePredictor:
 		return False
 
 	def pick_rank(self):
-		ranks = ['Challenger', 'Grandmaster', 'Master', 'Diamond', 'Platinum', 'Gold', 'Silver', 'Bronze', 'Iron']
-		for i, r in enumerate(ranks):
+		for i, r in enumerate(ranks.ranks):
 			print(f'{i+1}) {r}')
 		rIdx = input('Select a rank:')
 		while not self.is_valid_input(rIdx):
 			print('Invalid rank, try again')
 			rIdx = input('Select a rank:')
-		return ranks[int(rIdx)-1]
+		return ranks.ranks[int(rIdx)-1]
 
 	def run(self):
 		rank = self.pick_rank()
