@@ -5,19 +5,24 @@ class OfflinePredictor:
 	def __init__(self):
 		self.df = pd.read_csv('champions.csv')
 
-	def get_champ(self):
+	def get_champ(self, champs_to_exclude):
 		name = input('Enter champion name:')
-		if name in self.df.values:
-			return name
-		else:
-			print('Error, name does not exist')
-		return self.get_champ()
+		if not name in self.df.values:
+			print('Champion does not exist')
+			return self.get_champ(champs_to_exclude)
+		elif name in champs_to_exclude:
+			print('Champion is already taken')
+			return self.get_champ(champs_to_exclude)
+		return name
 
-	def get_team(self, name):
-		print(f'Enter champs for {name} team')
+	def get_game_champs(self, name):
+		print(f'Enter champs for blue team')
 		champs = []
 		for i in range(5):
-			champs.append(self.get_champ())
+			champs.append(self.get_champ(champs_to_exclude=champs))
+		print(f'Enter champs for red team')
+		for i in range(5):
+			champs.append(self.get_champ(champs_to_exclude=champs))
 		return champs
 
 	def get_champ_vec(self, champ_name):
@@ -59,13 +64,10 @@ class OfflinePredictor:
 
 	def run(self):
 		rank = self.pick_rank()
-		team1 = self.get_team('blue')
-		team2 = self.get_team('red')
+		champs = self.get_game_champs('blue')
 		inputs = []
-		for i in team1:
+		for i in champs:
 			inputs += self.get_champ_vec(i)
-		for j in team2:
-			inputs += self.get_champ_vec(j)
 		print('Rank:', rank)
 		print('Inputs:', inputs)
 
