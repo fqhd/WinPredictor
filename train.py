@@ -5,9 +5,11 @@ from tensorflow.keras import layers
 from tensorflow.keras import losses
 from tensorflow.keras import optimizers
 from tensorflow.keras.callbacks import TensorBoard
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 print(tf.config.list_physical_devices('GPU'))
 
-BATCH_SIZE = 32
+BATCH_SIZE = 128
 LR = 1e-5
 
 def get_training_data(rank):
@@ -24,8 +26,7 @@ def get_training_data(rank):
 
 def create_model():
 	model = keras.Sequential()
-	model.add(layers.Dense(256, activation='relu', kernel_initializer='he_uniform', bias_initializer='zeros', input_dim=170))
-	model.add(layers.Dense(128, activation='relu', kernel_initializer='he_uniform', bias_initializer='zeros'))
+	model.add(layers.Dense(128, activation='relu', kernel_initializer='he_uniform', bias_initializer='zeros', input_dim=170))
 	model.add(layers.Dense(64, activation='relu', kernel_initializer='he_uniform', bias_initializer='zeros'))
 	model.add(layers.Dense(16, activation='relu', kernel_initializer='he_uniform', bias_initializer='zeros'))
 	model.add(layers.Dense(1))
@@ -36,7 +37,7 @@ def compile_and_fit(model, name, training_data):
 	optimizer = optimizers.legacy.Adam(learning_rate=LR)
 	loss = losses.MeanAbsoluteError()
 	model.compile(loss=loss, optimizer=optimizer)
-	model.fit(train_x, train_y, batch_size=BATCH_SIZE, validation_split=0.01, epochs=200, callbacks=[TensorBoard(log_dir=f'logs/{name}')])
+	model.fit(train_x, train_y, batch_size=BATCH_SIZE, validation_split=0.01, epochs=10, callbacks=[TensorBoard(log_dir=f'logs/{name}')])
 
 def train_model_rank(rank):
 	data = get_training_data(rank)
