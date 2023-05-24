@@ -50,8 +50,7 @@ class Game {
 					currentHealth: 0, // Initialize using frame
 					position: [0, 0], // Initialize using frame
 					champion: match.info.participants[playerIndex].championName,
-					mastery: match.info.participants[playerIndex].champExperience,
-					masteryLevel: match.info.participants[playerIndex].masteryLevel,
+					mastery: 0, // Needs to be initialized async in init function
 					totalGold: 0, // Initialize using frame
 					alive: true,
 					respawnTimer: 0,
@@ -69,6 +68,7 @@ class Game {
 	}
 
 	update(frame) {
+
 		// This function will update the state of the game based on the event frame argument
 	}
 
@@ -83,7 +83,6 @@ class Game {
 				str += this.state.teams[i].players[j].position[1] + ',';
 				str += this.state.teams[i].players[j].champion + ',';
 				str += this.state.teams[i].players[j].mastery + ',';
-				str += this.state.teams[i].players[j].masteryLevel + ',';
 				str += this.state.teams[i].players[j].totalGold + ',';
 				str += this.state.teams[i].players[j].alive + ',';
 				str += this.state.teams[i].players[j].respawnTimer + ',';
@@ -103,9 +102,9 @@ class Game {
 			str += this.state.teams[i].numInhibs + ',';
 			str += this.state.teams[i].numRifts + ',';
 		}
-		str += this.state.time;
-		str += this.state.rank;
-		str += this.state.queueType;
+		str += this.state.time + ',';
+		str += this.state.rank + ',';
+		str += this.state.queueId + ',';
 		str += this.state.matchID;
 		return str;
 	}
@@ -256,5 +255,11 @@ async function main() {
 
 // main();
 
-const game = new Game();
-console.log(game.getState());
+
+(async () => {
+	const response = await fetch('https://europe.api.riotgames.com/lol/match/v5/matches/EUW1_6418617833?api_key=RGAPI-d3adf23e-2f45-43b9-a4af-0575fc0e8578');
+	const match = await response.json();
+	const game = new Game(match, 'EUW1_6418617833', 'Platinum');
+	await game.init(match); // This must be called to fetch data about player mastery because Class constructors cannot be asynchronous so we cannot execute api calls in there
+	console.log(game.getState());
+})();
