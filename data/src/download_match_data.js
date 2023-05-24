@@ -67,6 +67,19 @@ class Game {
 		}
 	}
 
+	async init(match, key) {
+		for(let i = 0; i < 2; i++) {
+			for(let j = 0; j < 5; j++) {
+				const playerIndex = i * 5 + j;
+				const encryptedSummonerID = match.info.participants[playerIndex].summonerId;
+				const championID = match.info.participants[playerIndex].championId;
+				const response = await apiCall(`https://euw1.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/${encryptedSummonerID}/by-champion/${championID}?api_key=${key}`)
+				const json = await response.json();
+				this.state.teams[i].players[j].mastery = json.championPoints;
+			}
+		}
+	}
+
 	update(frame) {
 
 		// This function will update the state of the game based on the event frame argument
@@ -260,6 +273,6 @@ async function main() {
 	const response = await fetch('https://europe.api.riotgames.com/lol/match/v5/matches/EUW1_6418617833?api_key=RGAPI-d3adf23e-2f45-43b9-a4af-0575fc0e8578');
 	const match = await response.json();
 	const game = new Game(match, 'EUW1_6418617833', 'Platinum');
-	await game.init(match); // This must be called to fetch data about player mastery because Class constructors cannot be asynchronous so we cannot execute api calls in there
+	await game.init(match, 'RGAPI-d3adf23e-2f45-43b9-a4af-0575fc0e8578'); // This must be called to fetch data about player mastery because Class constructors cannot be asynchronous so we cannot execute api calls in there
 	console.log(game.getState());
 })();
