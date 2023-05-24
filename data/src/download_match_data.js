@@ -16,11 +16,21 @@ export function apiCall(url) {
 	});
 }
 
+const queueIdMap = [];
+queueIdMap[400] = 'Normal';
+queueIdMap[420] = 'SoloDuo';
+queueIdMap[430] = 'Blind';
+queueIdMap[440] = 'Flex';
+queueIdMap[450] = 'Aram';
+
 class Game {
-	constructor(match) {
+	constructor(match, matchID, rank) {
 		this.state = {
 			teams: [],
-			time: 0
+			time: 0,
+			rank, // Iron Bronze Silver etc...
+			queueId: queueIdMap[match.info.queueId], // Either Normal, SoloDuo, Flex, Blind, or Aram,
+			matchID
 		};
 		for(let i = 0; i < 2; i++) {
 			const team = {
@@ -34,13 +44,15 @@ class Game {
 				numRifts: 0
 			};
 			for(let j = 0; j < 5; j++) {
+				const playerIndex = i * 5 + j;
 				team.players.push({
-					maxHealth: 0, // Initialize using match
-					currentHealth: 0, // Initialize using match
-					position: [0, 0], // Initialize using match
-					champion: 'Ahri', // Initialize using match
-					mastery: 0, // Initialize using queried player data from match
-					totalGold: 0, // Initialize using match
+					maxHealth: 0, // Initialize using frame
+					currentHealth: 0, // Initialize using frame
+					position: [0, 0], // Initialize using frame
+					champion: match.info.participants[playerIndex].championName,
+					mastery: match.info.participants[playerIndex].champExperience,
+					masteryLevel: match.info.participants[playerIndex].masteryLevel,
+					totalGold: 0, // Initialize using frame
 					alive: true,
 					respawnTimer: 0,
 					level: 1,
@@ -71,6 +83,7 @@ class Game {
 				str += this.state.teams[i].players[j].position[1] + ',';
 				str += this.state.teams[i].players[j].champion + ',';
 				str += this.state.teams[i].players[j].mastery + ',';
+				str += this.state.teams[i].players[j].masteryLevel + ',';
 				str += this.state.teams[i].players[j].totalGold + ',';
 				str += this.state.teams[i].players[j].alive + ',';
 				str += this.state.teams[i].players[j].respawnTimer + ',';
@@ -91,6 +104,9 @@ class Game {
 			str += this.state.teams[i].numRifts + ',';
 		}
 		str += this.state.time;
+		str += this.state.rank;
+		str += this.state.queueType;
+		str += this.state.matchID;
 		return str;
 	}
 }
