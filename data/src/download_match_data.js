@@ -25,6 +25,8 @@ queueIdMap[450] = 'Aram';
 
 class Game {
 	constructor(match, matchID, rank) {
+		this.baronTimer = 0;
+		this.elderTimer = 0;
 		this.state = {
 			teams: [],
 			time: 0,
@@ -41,26 +43,27 @@ class Game {
 				hasElder: 0,
 				numTurrets: 0,
 				numInhibs: 0,
+				baronCounter: 0,
+				elderCounter: 0,
 				numRifts: 0
 			};
 			for(let j = 0; j < 5; j++) {
 				const playerIndex = i * 5 + j;
 				team.players.push({
-					maxHealth: 0, // Initialize using frame
-					currentHealth: 0, // Initialize using frame
-					position: [0, 0], // Initialize using frame
+					maxHealth: 0,
+					currentHealth: 0,
+					position: [0, 0],
 					champion: match.info.participants[playerIndex].championName,
-					mastery: 0, // Needs to be initialized async in init function
-					totalGold: 0, // Initialize using frame
+					mastery: 0, 
+					totalGold: 0,
 					alive: true,
-					respawnTimer: 0,
-					level: 1,
+					level: 1, // Initialize using frame
 					kills: 0,
 					deaths: 0,
 					assists: 0,
 					creepscore: 0,
 					wardscore: 0,
-					xp: 0
+					xp: 0 // Initialize using frame
 				});
 			}
 			this.state.teams.push(team);
@@ -81,8 +84,68 @@ class Game {
 	}
 
 	update(frame) {
+		for(let i = 0; i < 2; i++) {
+			for(let j = 0; j < 5; j++) {
+				const playerIndex = i * 5 + j;
+				this.state.teams[i].players[i].maxHealth = frame.participantFrames[playerIndex.toString()].championStats.healthMax;
+				this.state.teams[i].players[i].currentHealth = frame.participantFrames[playerIndex.toString()].championStats.health;
+				this.state.teams[i].players[i].position[0] = frame.participantFrames[playerIndex.toString()].position.x;
+				this.state.teams[i].players[i].position[1] = frame.participantFrames[playerIndex.toString()].position.y;
+				this.state.teams[i].players[i].totalGold = frame.participantFrames[playerIndex.toString()].totalGold;
+				this.state.teams[i].players[i].level = frame.participantFrames[playerIndex.toString()].level;
+				this.state.teams[i].players[i].xp = frame.participantFrames[playerIndex.toString()].xp;
+			}
+		}
+		// Loop through events and update stats
+		for (const event of frame.events) {
+			switch(event.type) {
+				case 'CHAMPION_KILL':
+					this.processChampkill(event);
+					break;
+				case 'ELITE_MONSTER_KILL':
+					this.processMonsterKilla(event);
+			}
+		}
+		
+		for (const team of this.state.teams) {
+			team.hasElder = false;
+			team.hasBaron = false;
+			if(team.baronCounter > 0) {
+				team.hasBaron = true;
+			}
+			if(team.elderCounter > 0) {
+				team.hasElder = true;
+			}
+			team.baronCounter -= 1;
+			team.elderCounter -= 1;
+		}
+	}
 
-		// This function will update the state of the game based on the event frame argument
+	processChampkill(event) {
+		const teamId = parseInt((event.killerId - 1) / 10);
+		this.state.teams[teamId].players[(event.killerId - 1) % 5].kills += 1;
+		const victimTeamId = parseInt((event.victimId - 1) / 10);
+		this.state.teams[victimTeamId].players[(event.victimId - 1) % 5].deaths += 1;
+		for(const assistId of event.assistingParticipantIds) {
+			const assistTeamId = parseInt((assistId - 1) / 10);
+			this.state.teams[assistTeamId].players[(assistId - 1) % 5].assists += 1;
+		}
+	}
+
+	processMonsterKill(event) {
+		const teamId = parseInt((event.killerId - 1) / 10);
+		if(event.monsterType == 'DRAGON') {
+			this.state.teams[teamId].numDrakes += 1;
+			if(this.state.teams[teamId].numDrakes == 4) {
+				this.state.teams[teamId].hasSoul = true;
+			}
+		}else if(event.monsterType == 'RIFTHERALD') {
+			this.state.teams[teamId].numRifts += 1;
+		}else if(event.monsterType == 'BARON_NASHOR') {
+			this.state.teams[teamId].baronCounter = 3;
+		}else if(event.monsterType == 'ELDER_DRAGON') {
+			this.state.teams[teamId].elderCounter = 3;
+		}
 	}
 
 	getState() {
@@ -98,7 +161,6 @@ class Game {
 				str += this.state.teams[i].players[j].mastery + ',';
 				str += this.state.teams[i].players[j].totalGold + ',';
 				str += this.state.teams[i].players[j].alive + ',';
-				str += this.state.teams[i].players[j].respawnTimer + ',';
 				str += this.state.teams[i].players[j].level + ',';
 				str += this.state.teams[i].players[j].kills + ',';
 				str += this.state.teams[i].players[j].deaths + ',';
@@ -270,9 +332,10 @@ async function main() {
 
 
 (async () => {
-	const response = await fetch('https://europe.api.riotgames.com/lol/match/v5/matches/EUW1_6418617833?api_key=RGAPI-d3adf23e-2f45-43b9-a4af-0575fc0e8578');
+	const key = 'RGAPI-814764a5-3365-4263-89df-f0b205329823';
+	const response = await fetch(`https://europe.api.riotgames.com/lol/match/v5/matches/EUW1_6418617833?api_key=${key}`);
 	const match = await response.json();
 	const game = new Game(match, 'EUW1_6418617833', 'Platinum');
-	await game.init(match, 'RGAPI-d3adf23e-2f45-43b9-a4af-0575fc0e8578'); // This must be called to fetch data about player mastery because Class constructors cannot be asynchronous so we cannot execute api calls in there
+	await game.init(match, key); // This must be called to fetch data about player mastery because Class constructors cannot be asynchronous so we cannot execute api calls in there
 	console.log(game.getState());
 })();
