@@ -16,32 +16,100 @@ export function apiCall(url) {
 	});
 }
 
-function calcWinningChance(gameDuration, win) {
-	gameDuration = Math.min(Math.max(gameDuration, 900), 3000);
-	gameDuration -= 900;
-	gameDuration /= 2100;
-	// 0 = 15 minutes or less
-	// 1 = 50 minutes or more
-	gameDuration /= 2;
-	if (win) {
-		return 0.5 + gameDuration;
-	} else {
-		return 0.5 - gameDuration;
+class Game {
+	constructor(match) {
+		this.state = {
+			teams: [],
+			time: 0
+		};
+		for(let i = 0; i < 2; i++) {
+			const team = {
+				players: [],
+				hasBaron: false,
+				hasSoul: false,
+				numDrakes: 0,
+				hasElder: 0,
+				numTurrets: 0,
+				numInhibs: 0,
+				numRifts: 0
+			};
+			for(let j = 0; j < 5; j++) {
+				team.players.push({
+					maxHealth: 0, // Initialize using match
+					currentHealth: 0, // Initialize using match
+					position: [0, 0], // Initialize using match
+					champion: 'Ahri', // Initialize using match
+					mastery: 0, // Initialize using queried player data from match
+					totalGold: 0, // Initialize using match
+					alive: true,
+					respawnTimer: 0,
+					level: 1,
+					kills: 0,
+					deaths: 0,
+					assists: 0,
+					creepscore: 0,
+					wardscore: 0,
+					xp: 0
+				});
+			}
+			this.state.teams.push(team);
+		}
+	}
+
+	update(frame) {
+		// This function will update the state of the game based on the event frame argument
+	}
+
+	getState() {
+		// This function will return the current state of the game
+		let str = '';
+		for(let i = 0; i < 2; i++) {
+			for(let j = 0; j < 5; j++) {
+				str += this.state.teams[i].players[j].maxHealth + ',';
+				str += this.state.teams[i].players[j].currentHealth + ',';
+				str += this.state.teams[i].players[j].position[0] + ',';
+				str += this.state.teams[i].players[j].position[1] + ',';
+				str += this.state.teams[i].players[j].champion + ',';
+				str += this.state.teams[i].players[j].mastery + ',';
+				str += this.state.teams[i].players[j].totalGold + ',';
+				str += this.state.teams[i].players[j].alive + ',';
+				str += this.state.teams[i].players[j].respawnTimer + ',';
+				str += this.state.teams[i].players[j].level + ',';
+				str += this.state.teams[i].players[j].kills + ',';
+				str += this.state.teams[i].players[j].deaths + ',';
+				str += this.state.teams[i].players[j].assists + ',';
+				str += this.state.teams[i].players[j].creepscore + ',';
+				str += this.state.teams[i].players[j].wardscore + ',';
+				str += this.state.teams[i].players[j].xp + ',';
+			}
+			str += this.state.teams[i].hasBaron + ',';
+			str += this.state.teams[i].hasSoul + ',';
+			str += this.state.teams[i].numDrakes + ',';
+			str += this.state.teams[i].hasElder + ',';
+			str += this.state.teams[i].numTurrets + ',';
+			str += this.state.teams[i].numInhibs + ',';
+			str += this.state.teams[i].numRifts + ',';
+		}
+		str += this.state.time;
+		return str;
 	}
 }
 
-async function getMatchFromMatchID(matchID, key) {
+async function getMatchFromMatchID(matchID, key, gameID) {
 	try {
 		const response = await apiCall(`https://europe.api.riotgames.com/lol/match/v5/matches/${matchID}?api_key=${key}`);
 		const json = await response.json();
-		let data = '';
-		json.info.participants.forEach(p => {
-			data += p.championName + ',';
-		});
-		const gameDuration = json.info.gameDuration;
-		const win = json.info.participants[0].win;
-		const winningChance = calcWinningChance(gameDuration, win);
-		return data + (Math.round(winningChance * 1000) / 1000);
+		const game = new Game(json);
+		const rows = [];
+		// Calculate the number of frames are in this game
+		
+		for(let i = 0; i < frames.length; i++) {
+			game.update(frames[i]);
+			rows.push(game.getState());
+		}
+		
+		// Return an array of frames
+		return rows;
 	} catch (e) {
 		console.log(e);
 		return '';
@@ -134,7 +202,7 @@ async function processMatches(matches, tier) {
 		console.log(`Processing ${i * batchSize} matches`);
 		const promises = [];
 		for (let j = 0; j < batchSize; j++) {
-			promises.push(getMatchFromMatchID(matches[i * batchSize + j], API_KEYS[j]));
+			promises.push(getMatchFromMatchID(matches[i * batchSize + j], API_KEYS[j], i * batchSize + j));
 		}
 		const results = await Promise.all(promises);
 		for (let k = 0; k < results.length; k++) {
@@ -170,4 +238,7 @@ async function main() {
 	}
 }
 
-main();
+// main();
+
+const game = new Game();
+console.log(game.getState());
