@@ -38,12 +38,9 @@ class Game {
 		for (let i = 0; i < 2; i++) {
 			const team = {
 				players: [],
-				hasBaron: false,
-				hasSoul: false,
 				numDrakes: 0,
-				hasElder: 0,
 				numTurrets: 11,
-				numInhibs: 3,
+				inhibCounters: [],
 				baronCounter: 0,
 				elderCounter: 0,
 				numRifts: 0
@@ -113,16 +110,14 @@ class Game {
 		}
 
 		for (const team of this.state.teams) {
-			team.hasElder = false;
-			team.hasBaron = false;
-			if (team.baronCounter > 0) {
-				team.hasBaron = true;
-			}
-			if (team.elderCounter > 0) {
-				team.hasElder = true;
-			}
 			team.baronCounter -= 1;
 			team.elderCounter -= 1;
+			for(let i = 0; i < team.inhibCounters.length; i++) {
+				team.inhibCounters[i] -= 1;
+				if(team.inhibCounters[i] == 0) { 
+					team.inhibCounters.splice(i, 1);
+				}
+			}
 		}
 	}
 
@@ -143,7 +138,7 @@ class Game {
 		if(event.buildingType == 'TOWER_BUILDING') {
 			this.state.teams[event.teamId/100-1].numTurrets -= 1;
 		}else if(event.buildingType == 'INHIBITOR_BUILDING') {
-			this.state.teams[event.teamId/100-1].numInhibs -= 1;
+			this.state.teams[event.teamId/100-1].inhibCounters.push(6);
 		}
 	}
 
@@ -183,12 +178,12 @@ class Game {
 				str += this.state.teams[i].players[j].creepscore + ',';
 				str += this.state.teams[i].players[j].xp + ',';
 			}
-			str += this.state.teams[i].hasBaron + ',';
-			str += this.state.teams[i].hasSoul + ',';
+			str += (this.state.teams[i].baronCounter > 0) + ',';
+			str += (this.state.teams[i].numDrakes == 4) + ',';
 			str += this.state.teams[i].numDrakes + ',';
-			str += this.state.teams[i].hasElder + ',';
+			str += (this.state.teams[i].elderCounter > 0) + ',';
 			str += this.state.teams[i].numTurrets + ',';
-			str += this.state.teams[i].numInhibs + ',';
+			str += (3 - this.state.teams[i].inhibCounters.length) + ',';
 			str += this.state.teams[i].numRifts + ',';
 		}
 		str += this.state.time + ',';
