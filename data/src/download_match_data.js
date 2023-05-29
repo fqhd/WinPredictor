@@ -2,9 +2,9 @@ import 'node-fetch';
 import fs from 'fs'
 let API_KEYS;
 let TIME_BETWEEN_REQUESTS = 1300;
-const NUM_PLAYERS = 3;
+const NUM_PLAYERS = 1000;
 const MATCHES_PER_PLAYER = 20;
-const MAX_MATCHES = 15;
+const MAX_MATCHES = 10000;
 const MAX_MATCH_AGE = 7 * 24 * 60 * 60 * 1000;
 
 export function apiCall(url) {
@@ -311,6 +311,7 @@ async function processMatches(matches, tier) {
 	const numMatches = matches.length;
 	const batchSize = API_KEYS.length;
 	const numBatches = parseInt(numMatches / batchSize);
+	let scannedMatches = 0;
 	for (let i = 0; i < numBatches; i++) {
 		console.log(`Processing ${(i+1) * batchSize} matches`);
 		const promises = [];
@@ -319,8 +320,12 @@ async function processMatches(matches, tier) {
 		}
 		const results = await Promise.all(promises);
 		for (let k = 0; k < results.length; k++) {
+			scannedMatches++;
 			for(const line of results[k]) {
 				fs.appendFileSync(`matches/${tier}_training_data.txt`, line);
+			}
+			if(scannedMatches >= MAX_MATCHES) {
+				return;
 			}
 		}
 	}
