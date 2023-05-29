@@ -5,6 +5,7 @@ let TIME_BETWEEN_REQUESTS = 1300;
 const NUM_PLAYERS = 3;
 const MATCHES_PER_PLAYER = 20;
 const MAX_MATCHES = 15;
+const MAX_MATCH_AGE = 7 * 24 * 60 * 60 * 1000;
 
 export function apiCall(url) {
 	return new Promise((resolve, reject) => {
@@ -208,7 +209,11 @@ async function getMatchFromMatchID(matchID, key) {
 
 		let match = await fetch(`https://europe.api.riotgames.com/lol/match/v5/matches/${matchID}?api_key=${key}`);
 		match = await match.json();
-		const game = new Game(match, 'EUW1_6423648716', 'Platinum');
+		const timeSinceMatch = Date.now() - match.info.gameStartTimestamp;
+		if(timeSinceMatch >= MAX_MATCH_AGE) {
+			return rows;
+		}
+		const game = new Game(match, matchID, 'Platinum');
 		await game.init(match, key); // This must be called to fetch data about player mastery because Class constructors cannot be asynchronous so we cannot execute api calls in there
 		let timeline = await fetch(`https://europe.api.riotgames.com/lol/match/v5/matches/${matchID}/timeline?api_key=${key}`);
 		timeline = await timeline.json();
@@ -303,7 +308,7 @@ function getUniqueMatches(matches) {
 }
 
 async function processMatches(matches, tier) {
-	const numMatches = Math.min(matches.length, MAX_MATCHES);
+	const numMatches = matches.length;
 	const batchSize = API_KEYS.length;
 	const numBatches = parseInt(numMatches / batchSize);
 	for (let i = 0; i < numBatches; i++) {
@@ -349,4 +354,3 @@ async function main() {
 }
 
 main();
-
