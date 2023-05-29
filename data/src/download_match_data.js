@@ -25,8 +25,6 @@ queueIdMap[450] = 'Aram';
 
 class Game {
 	constructor(match, matchID, rank) {
-		this.baronTimer = 0;
-		this.elderTimer = 0;
 		this.state = {
 			teams: [],
 			win: match.info.participants[0].win,
@@ -41,13 +39,13 @@ class Game {
 				numDrakes: 0,
 				numTurrets: 11,
 				inhibCounters: [],
-				baronCounter: 0,
-				elderCounter: 0,
 				numRifts: 0
 			};
 			for (let j = 0; j < 5; j++) {
 				const playerIndex = i * 5 + j;
 				team.players.push({
+					baronTimer: 0,
+					elderTimer: 0,
 					maxHealth: 0,
 					currentHealth: 0,
 					position: [0, 0],
@@ -110,8 +108,10 @@ class Game {
 		}
 
 		for (const team of this.state.teams) {
-			team.baronCounter -= 1;
-			team.elderCounter -= 1;
+			for(const player of team.players) {
+				player.baronTimer -= 1;
+				player.elderTimer -= 1;
+			}
 			for(let i = 0; i < team.inhibCounters.length; i++) {
 				team.inhibCounters[i] -= 1;
 				if(team.inhibCounters[i] == 0) { 
@@ -126,6 +126,8 @@ class Game {
 		this.state.teams[teamId].players[(event.killerId - 1) % 5].kills += 1;
 		const victimTeamId = parseInt((event.victimId - 1) / 5);
 		this.state.teams[victimTeamId].players[(event.victimId - 1) % 5].deaths += 1;
+		this.state.teams[victimTeamId].players[(event.victimId - 1) % 5].baronTimer = 0;
+		this.state.teams[victimTeamId].players[(event.victimId - 1) % 5].elderTimer = 0;
 		if (event.assistingParticipantIds) {
 			for (const assistId of event.assistingParticipantIds) {
 				const assistTeamId = parseInt((assistId - 1) / 5);
@@ -152,9 +154,13 @@ class Game {
 		} else if (event.monsterType == 'RIFTHERALD') {
 			this.state.teams[teamId].numRifts += 1;
 		} else if (event.monsterType == 'BARON_NASHOR') {
-			this.state.teams[teamId].baronCounter = 3;
+			for(const player of this.state.teams[teamId].players) {
+				player.baronTimer = 4;
+			}
 		} else if (event.monsterType == 'ELDER_DRAGON') {
-			this.state.teams[teamId].elderCounter = 3;
+			for(const player of this.state.teams[teamId].players) {
+				player.elderTimer = 4;
+			}
 		}
 	}
 
@@ -177,11 +183,11 @@ class Game {
 				str += this.state.teams[i].players[j].assists + ',';
 				str += this.state.teams[i].players[j].creepscore + ',';
 				str += this.state.teams[i].players[j].xp + ',';
+				str += (this.state.teams[i].players[j].baronTimer > 0) + ',';
+				str += (this.state.teams[i].players[j].elderTimer > 0) + ',';
 			}
-			str += (this.state.teams[i].baronCounter > 0) + ',';
 			str += (this.state.teams[i].numDrakes == 4) + ',';
 			str += this.state.teams[i].numDrakes + ',';
-			str += (this.state.teams[i].elderCounter > 0) + ',';
 			str += this.state.teams[i].numTurrets + ',';
 			str += (3 - this.state.teams[i].inhibCounters.length) + ',';
 			str += this.state.teams[i].numRifts + ',';
