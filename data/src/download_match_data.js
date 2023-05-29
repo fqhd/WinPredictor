@@ -1,11 +1,10 @@
 import 'node-fetch';
 import fs from 'fs'
-import { config } from 'dotenv';
 let API_KEYS;
 let TIME_BETWEEN_REQUESTS = 1300;
-const NUM_PLAYERS = 10000;
+const NUM_PLAYERS = 3;
 const MATCHES_PER_PLAYER = 20;
-config();
+const MAX_MATCHES = 15;
 
 export function apiCall(url) {
 	return new Promise((resolve, reject) => {
@@ -123,7 +122,9 @@ class Game {
 
 	processChampKill(event) {
 		const teamId = parseInt((event.killerId - 1) / 5);
-		this.state.teams[teamId].players[(event.killerId - 1) % 5].kills += 1;
+		if(event.killerId > 0){
+			this.state.teams[teamId].players[(event.killerId - 1) % 5].kills += 1;
+		}
 		const victimTeamId = parseInt((event.victimId - 1) / 5);
 		this.state.teams[victimTeamId].players[(event.victimId - 1) % 5].deaths += 1;
 		this.state.teams[victimTeamId].players[(event.victimId - 1) % 5].baronTimer = 0;
@@ -196,22 +197,23 @@ class Game {
 		str += this.state.matchID + ',';
 		str += this.state.rank + ',';
 		str += this.state.queueType + ',';
-		str += this.state.win;
-		console.log(this.state);
+		str += this.state.win + '\n';
 		return str;
 	}
 }
 
-async function getMatchFromMatchID(matchID, key, gameID) {
+async function getMatchFromMatchID(matchID, key) {
 	try {
-		const response = await apiCall(`https://europe.api.riotgames.com/lol/match/v5/matches/${matchID}?api_key=${key}`);
-		const json = await response.json();
-		const game = new Game(json);
 		const rows = [];
-		// Calculate the number of frames are in this game
 
-		for (let i = 0; i < frames.length; i++) {
-			game.update(frames[i]);
+		let match = await fetch(`https://europe.api.riotgames.com/lol/match/v5/matches/${matchID}?api_key=${key}`);
+		match = await match.json();
+		const game = new Game(match, 'EUW1_6423648716', 'Platinum');
+		await game.init(match, key); // This must be called to fetch data about player mastery because Class constructors cannot be asynchronous so we cannot execute api calls in there
+		let timeline = await fetch(`https://europe.api.riotgames.com/lol/match/v5/matches/${matchID}/timeline?api_key=${key}`);
+		timeline = await timeline.json();
+		for (const frame of timeline.info.frames) {
+			game.update(frame);
 			rows.push(game.getState());
 		}
 
@@ -264,11 +266,10 @@ async function getMatchesFromTier(tier) {
 async function getPlayersFromTier(tier) {
 	if (tier == 'grandmaster') {
 		try {
-			console.log(`https://euw1.api.riotgames.com/lol/league/v4/grandmasterleagues/by-queue/RANKED_SOLO_5x5?api_key=${process.env.RIOT_KEY}`);
-			let response = await apiCall(`https://euw1.api.riotgames.com/lol/league/v4/grandmasterleagues/by-queue/RANKED_SOLO_5x5?api_key=${process.env.RIOT_KEY}`);
+			let response = await apiCall(`https://euw1.api.riotgames.com/lol/league/v4/grandmasterleagues/by-queue/RANKED_SOLO_5x5?api_key=${API_KEYS[0]}`);
 			let json = await response.json();
 			const gmplayers = json.entries;
-			response = await apiCall(`https://euw1.api.riotgames.com/lol/league/v4/challengerleagues/by-queue/RANKED_SOLO_5x5?api_key=${process.env.RIOT_KEY}`);
+			response = await apiCall(`https://euw1.api.riotgames.com/lol/league/v4/challengerleagues/by-queue/RANKED_SOLO_5x5?api_key=${API_KEYS[0]}`);
 			json = await response.json();
 			const chplayers = json.entries;
 			return gmplayers.concat(chplayers);
@@ -276,14 +277,14 @@ async function getPlayersFromTier(tier) {
 			console.log('Something fucked up');
 		}
 	} else if (tier == 'master') {
-		const response = await apiCall(`https://euw1.api.riotgames.com/lol/league/v4/masterleagues/by-queue/RANKED_SOLO_5x5?api_key=${process.env.RIOT_KEY}`);
+		const response = await apiCall(`https://euw1.api.riotgames.com/lol/league/v4/masterleagues/by-queue/RANKED_SOLO_5x5?api_key=${API_KEYS[0]}`);
 		const json = await response.json();
 		const players = json.entries;
 		return players;
 	} else {
 		let players = [];
 		for (let i = 0; i < parseInt(NUM_PLAYERS / 205); i++) {
-			const response = await apiCall(`https://euw1.api.riotgames.com/lol/league/v4/entries/RANKED_SOLO_5x5/${tier.toUpperCase()}/III?page=${i + 1}&api_key=${process.env.RIOT_KEY}`)
+			const response = await apiCall(`https://euw1.api.riotgames.com/lol/league/v4/entries/RANKED_SOLO_5x5/${tier.toUpperCase()}/III?page=${i + 1}&api_key=${API_KEYS[0]}`)
 			const json = await response.json();
 			players = players.concat(json);
 		}
@@ -302,18 +303,20 @@ function getUniqueMatches(matches) {
 }
 
 async function processMatches(matches, tier) {
-	const numMatches = matches.length;
+	const numMatches = Math.min(matches.length, MAX_MATCHES);
 	const batchSize = API_KEYS.length;
 	const numBatches = parseInt(numMatches / batchSize);
 	for (let i = 0; i < numBatches; i++) {
-		console.log(`Processing ${i * batchSize} matches`);
+		console.log(`Processing ${(i+1) * batchSize} matches`);
 		const promises = [];
 		for (let j = 0; j < batchSize; j++) {
-			promises.push(getMatchFromMatchID(matches[i * batchSize + j], API_KEYS[j], i * batchSize + j));
+			promises.push(getMatchFromMatchID(matches[i * batchSize + j], API_KEYS[j]));
 		}
 		const results = await Promise.all(promises);
 		for (let k = 0; k < results.length; k++) {
-			fs.appendFileSync(`matches/${tier}_training_data.txt`, results[k] + '\n');
+			for(const line of results[k]) {
+				fs.appendFileSync(`matches/${tier}_training_data.txt`, line);
+			}
 		}
 	}
 }
@@ -345,19 +348,5 @@ async function main() {
 	}
 }
 
-// main();
+main();
 
-
-(async () => {
-	const key = 'RGAPI-9c629f43-d85a-4f3a-8ac3-1c516523b713';
-	let match = await fetch(`https://europe.api.riotgames.com/lol/match/v5/matches/EUW1_6423648716?api_key=${key}`);
-	match = await match.json();
-	const game = new Game(match, 'EUW1_6423648716', 'Platinum');
-	await game.init(match, key); // This must be called to fetch data about player mastery because Class constructors cannot be asynchronous so we cannot execute api calls in there
-	let timeline = await fetch(`https://europe.api.riotgames.com/lol/match/v5/matches/EUW1_6423648716/timeline?api_key=${key}`);
-	timeline = await timeline.json();
-	for (const frame of timeline.info.frames) {
-		game.update(frame);
-		console.log(game.getState());
-	}
-})();
