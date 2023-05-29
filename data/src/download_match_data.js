@@ -203,19 +203,19 @@ class Game {
 	}
 }
 
-async function getMatchFromMatchID(matchID, key) {
+async function getMatchFromMatchID(matchID, key, tier) {
 	try {
 		const rows = [];
 
-		let match = await fetch(`https://europe.api.riotgames.com/lol/match/v5/matches/${matchID}?api_key=${key}`);
+		let match = await apiCall(`https://europe.api.riotgames.com/lol/match/v5/matches/${matchID}?api_key=${key}`);
 		match = await match.json();
 		const timeSinceMatch = Date.now() - match.info.gameStartTimestamp;
 		if(timeSinceMatch >= MAX_MATCH_AGE) {
 			return rows;
 		}
-		const game = new Game(match, matchID, 'Platinum');
+		const game = new Game(match, matchID, tier);
 		await game.init(match, key); // This must be called to fetch data about player mastery because Class constructors cannot be asynchronous so we cannot execute api calls in there
-		let timeline = await fetch(`https://europe.api.riotgames.com/lol/match/v5/matches/${matchID}/timeline?api_key=${key}`);
+		let timeline = await apiCall(`https://europe.api.riotgames.com/lol/match/v5/matches/${matchID}/timeline?api_key=${key}`);
 		timeline = await timeline.json();
 		for (const frame of timeline.info.frames) {
 			game.update(frame);
@@ -316,7 +316,7 @@ async function processMatches(matches, tier) {
 		console.log(`Processing ${(i+1) * batchSize} matches`);
 		const promises = [];
 		for (let j = 0; j < batchSize; j++) {
-			promises.push(getMatchFromMatchID(matches[i * batchSize + j], API_KEYS[j]));
+			promises.push(getMatchFromMatchID(matches[i * batchSize + j], API_KEYS[j], tier));
 		}
 		const results = await Promise.all(promises);
 		for (let k = 0; k < results.length; k++) {
