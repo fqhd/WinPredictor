@@ -270,8 +270,8 @@ async function getMatchesFromTier(tier) {
 
 async function getPlayersFromTier(tier) {
 	const key = API_KEYS[0];
-	if (tier == 'grandmaster') {
-		try {
+	try {
+		if (tier == 'grandmaster') {
 			let response = await apiCall(`https://euw1.api.riotgames.com/lol/league/v4/grandmasterleagues/by-queue/RANKED_SOLO_5x5?api_key=${key}`);
 			handleResponse(response, key);
 			let json = await response.json();
@@ -281,24 +281,25 @@ async function getPlayersFromTier(tier) {
 			json = await response.json();
 			const chplayers = json.entries;
 			return gmplayers.concat(chplayers);
-		} catch (e) {
-			console.log(e);
-		}
-	} else if (tier == 'master') {
-		const response = await apiCall(`https://euw1.api.riotgames.com/lol/league/v4/masterleagues/by-queue/RANKED_SOLO_5x5?api_key=${key}`);
-		handleResponse(response, key);
-		const json = await response.json();
-		const players = json.entries;
-		return players;
-	} else {
-		let players = [];
-		for (let i = 0; i < parseInt(NUM_PLAYERS / 205); i++) {
-			const response = await apiCall(`https://euw1.api.riotgames.com/lol/league/v4/entries/RANKED_SOLO_5x5/${tier.toUpperCase()}/III?page=${i + 1}&api_key=${key}`)
+		} else if (tier == 'master') {
+			const response = await apiCall(`https://euw1.api.riotgames.com/lol/league/v4/masterleagues/by-queue/RANKED_SOLO_5x5?api_key=${key}`);
 			handleResponse(response, key);
 			const json = await response.json();
-			players = players.concat(json);
+			const players = json.entries;
+			return players;
+		} else {
+			let players = [];
+			for (let i = 0; i < parseInt(NUM_PLAYERS / 205); i++) {
+				const response = await apiCall(`https://euw1.api.riotgames.com/lol/league/v4/entries/RANKED_SOLO_5x5/${tier.toUpperCase()}/III?page=${i + 1}&api_key=${key}`)
+				handleResponse(response, key);
+				const json = await response.json();
+				players = players.concat(json);
+			}
+			return players;
 		}
-		return players;
+	}catch(e) {
+		console.log(e);
+		return [];
 	}
 }
 
