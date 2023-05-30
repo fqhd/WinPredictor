@@ -2,7 +2,7 @@ import 'node-fetch';
 import fs from 'fs'
 let API_KEYS;
 let TIME_BETWEEN_REQUESTS = 1300;
-const NUM_PLAYERS = 1000;
+const NUM_PLAYERS = 2000;
 const MATCHES_PER_PLAYER = 20;
 const MAX_MATCHES = 10000;
 const MAX_MATCH_AGE = 7 * 24 * 60 * 60 * 1000;
@@ -10,27 +10,22 @@ const MAX_MATCH_AGE = 7 * 24 * 60 * 60 * 1000;
 export function apiCall(url) {
 	return new Promise((resolve, reject) => {
 		setTimeout(async () => {
-			const data = await fetch(url);
-			resolve(data);
+			try {
+				const data = await fetch(url);
+				resolve(data);
+			}catch(e) {
+				reject(e);
+			}
 		}, TIME_BETWEEN_REQUESTS);
 	});
 }
 
-const queueIdMap = [];
-queueIdMap[400] = 'Normal';
-queueIdMap[420] = 'SoloDuo';
-queueIdMap[430] = 'Blind';
-queueIdMap[440] = 'Flex';
-queueIdMap[450] = 'Aram';
-
 class Game {
-	constructor(match, matchID, rank) {
+	constructor(match, matchID) {
 		this.state = {
 			teams: [],
 			win: match.info.participants[0].win,
 			time: 0,
-			rank, // Iron Bronze Silver etc...
-			queueType: queueIdMap[match.info.queueId], // Either Normal, SoloDuo, Flex, Blind, or Aram,
 			matchID
 		};
 		for (let i = 0; i < 2; i++) {
@@ -52,13 +47,12 @@ class Game {
 					champion: match.info.participants[playerIndex].championName,
 					mastery: 0,
 					totalGold: 0,
-					alive: true,
-					level: 1, // Initialize using frame
+					level: 1,
 					kills: 0,
 					deaths: 0,
 					assists: 0,
 					creepscore: 0,
-					xp: 0 // Initialize using frame
+					xp: 0
 				});
 			}
 			this.state.teams.push(team);
@@ -72,6 +66,7 @@ class Game {
 				const encryptedSummonerID = match.info.participants[playerIndex].summonerId;
 				const championID = match.info.participants[playerIndex].championId;
 				const response = await apiCall(`https://euw1.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/${encryptedSummonerID}/by-champion/${championID}?api_key=${key}`)
+				handleResponse(response, key);
 				const json = await response.json();
 				this.state.teams[i].players[j].mastery = json.championPoints;
 			}
@@ -178,7 +173,6 @@ class Game {
 				str += this.state.teams[i].players[j].champion + ',';
 				str += this.state.teams[i].players[j].mastery + ',';
 				str += this.state.teams[i].players[j].totalGold + ',';
-				str += this.state.teams[i].players[j].alive + ',';
 				str += this.state.teams[i].players[j].level + ',';
 				str += this.state.teams[i].players[j].kills + ',';
 				str += this.state.teams[i].players[j].deaths + ',';
@@ -203,19 +197,26 @@ class Game {
 	}
 }
 
-async function getMatchFromMatchID(matchID, key, tier) {
+async function getMatchFromMatchID(matchID, key) {
 	try {
 		const rows = [];
 
 		let match = await apiCall(`https://europe.api.riotgames.com/lol/match/v5/matches/${matchID}?api_key=${key}`);
+		handleResponse(match, key);
 		match = await match.json();
+
 		const timeSinceMatch = Date.now() - match.info.gameStartTimestamp;
 		if(timeSinceMatch >= MAX_MATCH_AGE) {
 			return rows;
 		}
-		const game = new Game(match, matchID, tier);
+		const game = new Game(match, matchID);
 		await game.init(match, key); // This must be called to fetch data about player mastery because Class constructors cannot be asynchronous so we cannot execute api calls in there
 		let timeline = await apiCall(`https://europe.api.riotgames.com/lol/match/v5/matches/${matchID}/timeline?api_key=${key}`);
+		handleResponse(timeline, key);
+		if(timeline.status != 200) {
+			const error = getErrorFromStatusCode(timeline.status, key);
+			throw error;
+		}
 		timeline = await timeline.json();
 		for (const frame of timeline.info.frames) {
 			game.update(frame);
@@ -226,7 +227,7 @@ async function getMatchFromMatchID(matchID, key, tier) {
 		return rows;
 	} catch (e) {
 		console.log(e);
-		return '';
+		return [];
 	}
 }
 
@@ -235,6 +236,7 @@ async function getPlayerMatchIDs(summonerName, key) {
 	summonerName = encodeURIComponent(summonerName);
 	try {
 		const response = await apiCall(`https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${summonerName}?api_key=${key}`);
+		handleResponse(response, key);
 		const player = await response.json();
 		if (player['id'] == undefined) {
 			console.log('Error, summoner not found: ' + summonerName);
@@ -243,10 +245,12 @@ async function getPlayerMatchIDs(summonerName, key) {
 		}
 		const puuid = player.puuid;
 		const resp = await apiCall(`https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?queue=420&start=0&count=${MATCHES_PER_PLAYER}&api_key=${key}`);
+		handleResponse(resp, key);
 		const matchIDs = await resp.json();
 		return matchIDs;
-	} catch (error) {
+	} catch (e) {
 		console.log('Error, summoner not found: ' + summonerName);
+		console.log(e);
 		return [];
 	}
 }
@@ -269,27 +273,32 @@ async function getMatchesFromTier(tier) {
 }
 
 async function getPlayersFromTier(tier) {
+	const key = API_KEYS[0];
 	if (tier == 'grandmaster') {
 		try {
-			let response = await apiCall(`https://euw1.api.riotgames.com/lol/league/v4/grandmasterleagues/by-queue/RANKED_SOLO_5x5?api_key=${API_KEYS[0]}`);
+			let response = await apiCall(`https://euw1.api.riotgames.com/lol/league/v4/grandmasterleagues/by-queue/RANKED_SOLO_5x5?api_key=${key}`);
+			handleResponse(response, key);
 			let json = await response.json();
 			const gmplayers = json.entries;
-			response = await apiCall(`https://euw1.api.riotgames.com/lol/league/v4/challengerleagues/by-queue/RANKED_SOLO_5x5?api_key=${API_KEYS[0]}`);
+			response = await apiCall(`https://euw1.api.riotgames.com/lol/league/v4/challengerleagues/by-queue/RANKED_SOLO_5x5?api_key=${key}`);
+			handleResponse(response, key);
 			json = await response.json();
 			const chplayers = json.entries;
 			return gmplayers.concat(chplayers);
 		} catch (e) {
-			console.log('Something fucked up');
+			console.log(e);
 		}
 	} else if (tier == 'master') {
-		const response = await apiCall(`https://euw1.api.riotgames.com/lol/league/v4/masterleagues/by-queue/RANKED_SOLO_5x5?api_key=${API_KEYS[0]}`);
+		const response = await apiCall(`https://euw1.api.riotgames.com/lol/league/v4/masterleagues/by-queue/RANKED_SOLO_5x5?api_key=${key}`);
+		handleResponse(response, key);
 		const json = await response.json();
 		const players = json.entries;
 		return players;
 	} else {
 		let players = [];
 		for (let i = 0; i < parseInt(NUM_PLAYERS / 205); i++) {
-			const response = await apiCall(`https://euw1.api.riotgames.com/lol/league/v4/entries/RANKED_SOLO_5x5/${tier.toUpperCase()}/III?page=${i + 1}&api_key=${API_KEYS[0]}`)
+			const response = await apiCall(`https://euw1.api.riotgames.com/lol/league/v4/entries/RANKED_SOLO_5x5/${tier.toUpperCase()}/III?page=${i + 1}&api_key=${key}`)
+			handleResponse(response, key);
 			const json = await response.json();
 			players = players.concat(json);
 		}
@@ -316,13 +325,13 @@ async function processMatches(matches, tier) {
 		console.log(`Processing ${(i+1) * batchSize} matches`);
 		const promises = [];
 		for (let j = 0; j < batchSize; j++) {
-			promises.push(getMatchFromMatchID(matches[i * batchSize + j], API_KEYS[j], tier));
+			promises.push(getMatchFromMatchID(matches[i * batchSize + j], API_KEYS[j]));
 		}
 		const results = await Promise.all(promises);
 		for (let k = 0; k < results.length; k++) {
 			scannedMatches++;
 			for(const line of results[k]) {
-				fs.appendFileSync(`matches/${tier}_training_data.txt`, line);
+				fs.appendFileSync(`matches/${tier}_training_data.csv`, line);
 			}
 			if(scannedMatches >= MAX_MATCHES) {
 				return;
@@ -350,7 +359,7 @@ async function main() {
 		console.log('Warning: Running on low number of API keys, download may take a while');
 	}
 
-	const tiers = ['grandmaster', 'master', 'diamond', 'platinum', 'gold', 'silver', 'bronze', 'iron'];
+	const tiers = ['master', 'diamond', 'platinum', 'gold', 'silver', 'bronze', 'iron'];
 
 	for (let i = 0; i < tiers.length; i++) {
 		const matches = getUniqueMatches(await getMatchesFromTier(tiers[i])); // This holds an array of batches of matches, where each batch is API_KEYS.length long
@@ -359,3 +368,34 @@ async function main() {
 }
 
 main();
+
+function getErrorFromStatusCode(code, key) {
+	switch(code) {
+		case 400:
+				return new Error('Bad request(syntax error in request), using key: ' + key);
+		case 401:
+				return new Error('Unauthorized request(no api key provided), using key: ' + key);
+		case 403:
+				return new Error('Forbidden request(invalid endpoint or invalid api key), using key: ' + key);
+		case 404:
+				return new Error('API Endpoint not found, using key: ' + key);
+		case 415:
+				return new Error('Unsupported media type, using key: ' + key);
+		case 429:
+				return new Error('Rate limit exceeded, using key: ' + key);
+		case 500:
+			return new Error('Internal server error, using key: ' + key);
+		case 503:
+			return new Error('Service Unavailable, using key: ' + key);
+		default:
+			return new Error('Unknown code provided: ' + code);
+	}
+
+}
+
+function handleResponse(resp, key) {
+	if(resp.status != 200) {
+		const error = getErrorFromStatusCode(resp.status, key);
+		throw error;
+	}
+}
