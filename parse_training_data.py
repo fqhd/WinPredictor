@@ -1,6 +1,6 @@
 import pandas as pd
-import tensorflow as tf
 import pickle
+import tensorflow as tf
 
 df = pd.read_csv('champions.csv')
 
@@ -26,37 +26,69 @@ def get_champ_vec(champ_name):
 			arr.append(row[i] / 10)
 	return arr
 
-def process_match(match):
-	champs = match.split(',')
+def process_frame(frame):
 	vec = []
-	for i in range(10):
-		champ_vec = get_champ_vec(champs[i])
-		for e in champ_vec:
+	for e in frame:
+		if(e == True):
+			vec.append(1)
+		elif(e == False):
+			vec.append(0)
+		elif(type(e) == str):
+			vec += get_champ_vec(e)
+		else:
 			vec.append(e)
-	if(champs[10] == 'true'):
-		vec.append(1)
-	else:
-		vec.append(0)
 	return vec
 
-ranks = ['grandmaster', 'master', 'diamond', 'platinum', 'gold', 'silver', 'bronze', 'iron']
 
-for name in ranks:
-	with open('data/matches/' + name + '_training_data.txt', 'r') as f, open('data/matches/' + name + '.ds', 'wb') as f_out:
+def process_rank(rank):
+	games_df = pd.read_csv('data/matches/master_training_data.csv', names=get_column_names())
+
+	row = games_df.iloc[0]
+	with open('data/matches/' + rank + '.ds', 'wb') as f_out:
 		inputs = []
 		labels = []
-		matches = f.read().split('\n')
-		droppedCount = 0
-		for i in range(len(matches)):
-			try:
-				match_vec = process_match(matches[i])
-				inputs.append(match_vec[:-1])
-				labels.append(match_vec[-1])
-			except:
-				droppedCount+=1
-			if i % 10000 == 0:
-				prog = int(i/len(matches)*100)
+		for index, row in games_df.iterrows():
+			frame_vec = process_frame(row)
+			inputs.append(frame_vec[:-1])
+			labels.append(frame_vec[-1])
+			if index % 10000 == 0:
+				prog = int(index/len(games_df)*100)
 				print(f'Progress: {prog}%')
-		print(f'Dropped Games: {droppedCount}')
 		training_data = tf.constant(inputs, dtype='float32'), tf.constant(labels)
 		pickle.dump(training_data, f_out)
+
+def main():
+	ranks = ['grandmaster', 'master', 'diamond', 'platinum', 'gold', 'silver', 'bronze', 'iron']
+	for rank in ranks:
+		process_rank(rank)
+
+def get_column_names():
+	names = []
+	for i in range(2):
+		for j in range(5):
+			playerID = str(i) + ',' + str(j)
+			names.append('MaxHealth' + playerID)
+			names.append('CurrentHealth' + playerID)
+			names.append('PositionX' + playerID)
+			names.append('PositionY' + playerID)
+			names.append('Champion' + playerID)
+			names.append('Mastery' + playerID)
+			names.append('TotalGold' + playerID)
+			names.append('Level' + playerID)
+			names.append('Kills' + playerID)
+			names.append('Deaths' + playerID)
+			names.append('Assists' + playerID)
+			names.append('Creepscore' + playerID)
+			names.append('XP' + playerID)
+			names.append('Baron' + playerID)
+			names.append('Elder' + playerID)
+		names.append('Soul' + str(i))
+		names.append('Drakes' + str(i))
+		names.append('Turrets' + str(i))
+		names.append('Inhibs' + str(i))
+		names.append('Rifts' + str(i))
+	names.append('Time')
+	names.append('Win')
+	return names
+
+process_rank('master')
