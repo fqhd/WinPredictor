@@ -21,12 +21,11 @@ export function apiCall(url) {
 }
 
 class Game {
-	constructor(match, matchID) {
+	constructor(match) {
 		this.state = {
 			teams: [],
 			win: match.info.participants[0].win,
 			time: 0,
-			matchID
 		};
 		for (let i = 0; i < 2; i++) {
 			const team = {
@@ -189,7 +188,6 @@ class Game {
 			str += this.state.teams[i].numRifts + ',';
 		}
 		str += this.state.time + ',';
-		str += this.state.matchID + ',';
 		str += this.state.win + '\n';
 		return str;
 	}
@@ -207,7 +205,7 @@ async function getMatchFromMatchID(matchID, key) {
 		if(timeSinceMatch >= MAX_MATCH_AGE) {
 			return rows;
 		}
-		const game = new Game(match, matchID);
+		const game = new Game(match);
 		await game.init(match, key); // This must be called to fetch data about player mastery because Class constructors cannot be asynchronous so we cannot execute api calls in there
 		let timeline = await apiCall(`https://europe.api.riotgames.com/lol/match/v5/matches/${matchID}/timeline?api_key=${key}`);
 		handleResponse(timeline, key);
