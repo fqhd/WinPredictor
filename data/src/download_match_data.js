@@ -4,7 +4,7 @@ let API_KEYS;
 let TIME_BETWEEN_REQUESTS = 1300;
 const NUM_PLAYERS = 2000;
 const MATCHES_PER_PLAYER = 20;
-const MAX_MATCHES = 10000;
+const MAX_MATCHES = 10;
 const MAX_MATCH_AGE = 7 * 24 * 60 * 60 * 1000;
 
 export function apiCall(url) {
@@ -190,8 +190,6 @@ class Game {
 		}
 		str += this.state.time + ',';
 		str += this.state.matchID + ',';
-		str += this.state.rank + ',';
-		str += this.state.queueType + ',';
 		str += this.state.win + '\n';
 		return str;
 	}
