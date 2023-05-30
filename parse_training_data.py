@@ -91,4 +91,6 @@ def get_column_names():
 	names.append('Win')
 	return names
 
-process_rank('master')
+tiers = ['grandmaster', 'master', 'diamond', 'platinum', 'gold', 'silver', 'bronze', 'iron']
+for t in tiers:
+	process_rank(t)

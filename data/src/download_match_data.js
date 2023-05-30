@@ -355,7 +355,7 @@ async function main() {
 		console.log('Warning: Running on low number of API keys, download may take a while');
 	}
 
-	const tiers = ['master', 'diamond', 'platinum', 'gold', 'silver', 'bronze', 'iron'];
+	const tiers = ['grandmaster', 'master', 'diamond', 'platinum', 'gold', 'silver', 'bronze', 'iron'];
 
 	for (let i = 0; i < tiers.length; i++) {
 		const matches = getUniqueMatches(await getMatchesFromTier(tiers[i])); // This holds an array of batches of matches, where each batch is API_KEYS.length long
