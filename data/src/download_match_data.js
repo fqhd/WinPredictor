@@ -4,7 +4,7 @@ let API_KEYS;
 let TIME_BETWEEN_REQUESTS = 1300;
 const NUM_PLAYERS = 2000;
 const MATCHES_PER_PLAYER = 20;
-const MAX_MATCHES = 10;
+const MAX_MATCHES = 10000;
 const MAX_MATCH_AGE = 7 * 24 * 60 * 60 * 1000;
 
 export function apiCall(url) {
@@ -356,7 +356,7 @@ async function main() {
 		console.log('Warning: Running on low number of API keys, download may take a while');
 	}
 
-	const tiers = ['grandmaster', 'master', 'diamond', 'platinum', 'gold', 'silver', 'bronze', 'iron'];
+	const tiers = ['gold', 'bronze', 'iron'];
 
 	for (let i = 0; i < tiers.length; i++) {
 		const matches = getUniqueMatches(await getMatchesFromTier(tiers[i])); // This holds an array of batches of matches, where each batch is API_KEYS.length long

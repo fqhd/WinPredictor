@@ -57,11 +57,6 @@ def process_rank(rank):
 		training_data = tf.constant(inputs, dtype='float32'), tf.constant(labels)
 		pickle.dump(training_data, f_out)
 
-def main():
-	ranks = ['grandmaster', 'master', 'diamond', 'platinum', 'gold', 'silver', 'bronze', 'iron']
-	for rank in ranks:
-		process_rank(rank)
-
 def get_column_names():
 	names = []
 	for i in range(2):
@@ -91,6 +86,5 @@ def get_column_names():
 	names.append('Win')
 	return names
 
-tiers = ['grandmaster', 'master', 'diamond', 'platinum', 'gold', 'silver', 'bronze', 'iron']
-for t in tiers:
-	process_rank(t)
+rank = input('Enter Rank to Process: ')
+process_rank(rank)
