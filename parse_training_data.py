@@ -1,6 +1,7 @@
 import pandas as pd
 import pickle
 import tensorflow as tf
+import torch
 
 df = pd.read_csv('champions.csv')
 
@@ -41,7 +42,7 @@ def process_frame(frame):
 
 
 def process_rank(rank):
-	games_df = pd.read_csv('data/matches/master_training_data.csv', names=get_column_names())
+	games_df = pd.read_csv(f'data/matches/{rank}_training_data.csv', names=get_column_names())
 
 	row = games_df.iloc[0]
 	with open('data/matches/' + rank + '.ds', 'wb') as f_out:
@@ -54,7 +55,7 @@ def process_rank(rank):
 			if index % 10000 == 0:
 				prog = int(index/len(games_df)*100)
 				print(f'Progress: {prog}%')
-		training_data = tf.constant(inputs, dtype='float32'), tf.constant(labels)
+		training_data = torch.Tensor(inputs, dtype='float32'), torch.Tensor(labels)
 		pickle.dump(training_data, f_out)
 
 def get_column_names():
