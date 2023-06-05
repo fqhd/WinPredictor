@@ -2,9 +2,9 @@ import 'node-fetch';
 import fs from 'fs'
 let API_KEYS;
 let TIME_BETWEEN_REQUESTS = 1300;
-const NUM_PLAYERS = 2000;
+const NUM_PLAYERS = 10000;
 const MATCHES_PER_PLAYER = 20;
-const MAX_MATCHES = 10000;
+const MAX_MATCHES = 20000;
 const MAX_MATCH_AGE = 7 * 24 * 60 * 60 * 1000;
 
 export function apiCall(url) {
@@ -44,7 +44,7 @@ class Game {
 					currentHealth: 0,
 					position: [0, 0],
 					champion: match.info.participants[playerIndex].championName,
-					mastery: 0,
+					// mastery: 0,
 					totalGold: 0,
 					level: 1,
 					kills: 0,
@@ -58,6 +58,7 @@ class Game {
 		}
 	}
 
+	/*
 	async init(match, key) {
 		for (let i = 0; i < 2; i++) {
 			for (let j = 0; j < 5; j++) {
@@ -71,6 +72,7 @@ class Game {
 			}
 		}
 	}
+	*/
 
 	update(frame) {
 		this.state.time = frame.timestamp;
@@ -170,7 +172,7 @@ class Game {
 				str += this.state.teams[i].players[j].position[0] + ',';
 				str += this.state.teams[i].players[j].position[1] + ',';
 				str += this.state.teams[i].players[j].champion + ',';
-				str += this.state.teams[i].players[j].mastery + ',';
+				// str += this.state.teams[i].players[j].mastery + ',';
 				str += this.state.teams[i].players[j].totalGold + ',';
 				str += this.state.teams[i].players[j].level + ',';
 				str += this.state.teams[i].players[j].kills + ',';
@@ -206,7 +208,7 @@ async function getMatchFromMatchID(matchID, key) {
 			return rows;
 		}
 		const game = new Game(match);
-		await game.init(match, key); // This must be called to fetch data about player mastery because Class constructors cannot be asynchronous so we cannot execute api calls in there
+		// await game.init(match, key); // This must be called to fetch data about player mastery because Class constructors cannot be asynchronous so we cannot execute api calls in there
 		let timeline = await apiCall(`https://europe.api.riotgames.com/lol/match/v5/matches/${matchID}/timeline?api_key=${key}`);
 		handleResponse(timeline, key);
 		if(timeline.status != 200) {
@@ -326,7 +328,9 @@ async function processMatches(matches, tier) {
 		}
 		const results = await Promise.all(promises);
 		for (let k = 0; k < results.length; k++) {
-			scannedMatches++;
+			if(results[k].length > 0){
+				scannedMatches++;
+			}
 			for(const line of results[k]) {
 				fs.appendFileSync(`matches/${tier}_training_data.csv`, line);
 			}
@@ -356,7 +360,7 @@ async function main() {
 		console.log('Warning: Running on low number of API keys, download may take a while');
 	}
 
-	const tiers = ['gold', 'bronze', 'iron'];
+	const tiers = ['platinum'];
 
 	for (let i = 0; i < tiers.length; i++) {
 		const matches = getUniqueMatches(await getMatchesFromTier(tiers[i])); // This holds an array of batches of matches, where each batch is API_KEYS.length long

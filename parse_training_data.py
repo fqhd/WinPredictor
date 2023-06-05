@@ -1,6 +1,7 @@
 import pandas as pd
 import pickle
 import tensorflow as tf
+import random
 
 df = pd.read_csv('champions.csv')
 
@@ -38,24 +39,47 @@ def process_frame(frame):
 		else:
 			vec.append(e)
 	return vec
-
+	
 
 def process_rank(rank):
 	games_df = pd.read_csv(f'data/matches/{rank}_training_data.csv', names=get_column_names())
 
 	row = games_df.iloc[0]
+
+	
 	with open('data/matches/' + rank + '.ds', 'wb') as f_out:
-		inputs = []
-		labels = []
+		frame_vecs = []
 		for index, row in games_df.iterrows():
 			frame_vec = process_frame(row)
-			inputs.append(frame_vec[:-1])
-			labels.append(frame_vec[-1])
+			frame_vecs.append(frame_vec)
 			if index % 10000 == 0:
 				prog = int(index/len(games_df)*100)
 				print(f'Progress: {prog}%')
-		training_data = tf.constant(inputs, dtype='float32'), tf.constant(labels, dtype='int32')
-		pickle.dump(training_data, f_out)
+		random.shuffle(frame_vecs)
+		data = {
+			'training': ([], []),
+			'testing': []
+		}
+		for i in range(51):
+			data['testing'].append(([], []))
+		for frame_vec in frame_vecs[:-10000]:
+			data['training'][0].append(frame_vec[:-1])
+			data['training'][1].append(frame_vec[-1])
+		for frame_vec in frame_vecs[-10000:]:
+			time_in_minutes = int(frame_vec[-2] / 60000)
+			time_in_minutes = min(time_in_minutes, 50)
+			data['testing'][time_in_minutes][0].append(frame_vec[:-1])
+			data['testing'][time_in_minutes][1].append(frame_vec[-1])
+		tensor_data = {
+			'testing': []
+		}
+		tensor_data['training'] = tf.constant(data['training'][0], dtype='float32'), tf.constant(data['training'][1], dtype='int32')
+		for i in range(51):
+			tensor_data['testing'].append((
+				tf.constant(data['testing'][i][0], dtype='float32'),
+				tf.constant(data['testing'][i][1], dtype='int32')
+			))
+		pickle.dump(tensor_data, f_out)
 
 def get_column_names():
 	names = []
@@ -67,7 +91,6 @@ def get_column_names():
 			names.append('PositionX' + playerID)
 			names.append('PositionY' + playerID)
 			names.append('Champion' + playerID)
-			names.append('Mastery' + playerID)
 			names.append('TotalGold' + playerID)
 			names.append('Level' + playerID)
 			names.append('Kills' + playerID)
