@@ -86,18 +86,12 @@ def get_column_names():
 	for i in range(2):
 		for j in range(5):
 			playerID = str(i) + ',' + str(j)
-			names.append('MaxHealth' + playerID)
-			names.append('CurrentHealth' + playerID)
-			names.append('PositionX' + playerID)
-			names.append('PositionY' + playerID)
 			names.append('Champion' + playerID)
-			names.append('TotalGold' + playerID)
 			names.append('Level' + playerID)
 			names.append('Kills' + playerID)
 			names.append('Deaths' + playerID)
 			names.append('Assists' + playerID)
 			names.append('Creepscore' + playerID)
-			names.append('XP' + playerID)
 			names.append('Baron' + playerID)
 			names.append('Elder' + playerID)
 		names.append('Soul' + str(i))

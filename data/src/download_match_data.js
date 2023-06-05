@@ -40,18 +40,18 @@ class Game {
 				team.players.push({
 					baronTimer: 0,
 					elderTimer: 0,
-					maxHealth: 0,
-					currentHealth: 0,
-					position: [0, 0],
+					// maxHealth: 0,
+					// currentHealth: 0,
+					// position: [0, 0],
 					champion: match.info.participants[playerIndex].championName,
 					// mastery: 0,
-					totalGold: 0,
+					// totalGold: 0,
 					level: 1,
 					kills: 0,
 					deaths: 0,
 					assists: 0,
 					creepscore: 0,
-					xp: 0
+					// xp: 0
 				});
 			}
 			this.state.teams.push(team);
@@ -79,13 +79,13 @@ class Game {
 		for (let i = 0; i < 2; i++) {
 			for (let j = 0; j < 5; j++) {
 				const playerIndex = i * 5 + j;
-				this.state.teams[i].players[j].maxHealth = frame.participantFrames[(playerIndex + 1).toString()].championStats.healthMax;
-				this.state.teams[i].players[j].currentHealth = frame.participantFrames[(playerIndex + 1).toString()].championStats.health;
-				this.state.teams[i].players[j].position[0] = frame.participantFrames[(playerIndex + 1).toString()].position.x;
-				this.state.teams[i].players[j].position[1] = frame.participantFrames[(playerIndex + 1).toString()].position.y;
-				this.state.teams[i].players[j].totalGold = frame.participantFrames[(playerIndex + 1).toString()].totalGold;
+				// this.state.teams[i].players[j].maxHealth = frame.participantFrames[(playerIndex + 1).toString()].championStats.healthMax;
+				// this.state.teams[i].players[j].currentHealth = frame.participantFrames[(playerIndex + 1).toString()].championStats.health;
+				// this.state.teams[i].players[j].position[0] = frame.participantFrames[(playerIndex + 1).toString()].position.x;
+				// this.state.teams[i].players[j].position[1] = frame.participantFrames[(playerIndex + 1).toString()].position.y;
+				// this.state.teams[i].players[j].totalGold = frame.participantFrames[(playerIndex + 1).toString()].totalGold;
 				this.state.teams[i].players[j].level = frame.participantFrames[(playerIndex + 1).toString()].level;
-				this.state.teams[i].players[j].xp = frame.participantFrames[(playerIndex + 1).toString()].xp;
+				// this.state.teams[i].players[j].xp = frame.participantFrames[(playerIndex + 1).toString()].xp;
 				this.state.teams[i].players[j].creepscore = frame.participantFrames[(playerIndex + 1).toString()].minionsKilled + frame.participantFrames[(playerIndex + 1).toString()].jungleMinionsKilled;
 			}
 		}
@@ -167,19 +167,19 @@ class Game {
 		let str = '';
 		for (let i = 0; i < 2; i++) {
 			for (let j = 0; j < 5; j++) {
-				str += this.state.teams[i].players[j].maxHealth + ',';
-				str += this.state.teams[i].players[j].currentHealth + ',';
-				str += this.state.teams[i].players[j].position[0] + ',';
-				str += this.state.teams[i].players[j].position[1] + ',';
+				// str += this.state.teams[i].players[j].maxHealth + ',';
+				// str += this.state.teams[i].players[j].currentHealth + ',';
+				// str += this.state.teams[i].players[j].position[0] + ',';
+				// str += this.state.teams[i].players[j].position[1] + ',';
 				str += this.state.teams[i].players[j].champion + ',';
 				// str += this.state.teams[i].players[j].mastery + ',';
-				str += this.state.teams[i].players[j].totalGold + ',';
+				// str += this.state.teams[i].players[j].totalGold + ',';
 				str += this.state.teams[i].players[j].level + ',';
 				str += this.state.teams[i].players[j].kills + ',';
 				str += this.state.teams[i].players[j].deaths + ',';
 				str += this.state.teams[i].players[j].assists + ',';
 				str += this.state.teams[i].players[j].creepscore + ',';
-				str += this.state.teams[i].players[j].xp + ',';
+				// str += this.state.teams[i].players[j].xp + ',';
 				str += (this.state.teams[i].players[j].baronTimer > 0) + ',';
 				str += (this.state.teams[i].players[j].elderTimer > 0) + ',';
 			}
