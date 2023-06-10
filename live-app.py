@@ -58,7 +58,7 @@ class Game():
 				'soul': False,
 				'drakes': 0,
 				'turrets': 11,
-				'inhibCounters': []
+				'inhibTimers': []
 			})
 
 	def update(self, player_data, event_data):
@@ -74,15 +74,16 @@ class Game():
 				team['players'][i]['deaths'] = player_data[i]['scores']['deaths']
 				team['players'][i]['assists'] = player_data[i]['scores']['assists']
 				team['players'][i]['creepscore'] = player_data[i]['scores']['creepScore']
-			for i in range(len(team['inhibCounters'])):
-				team['inhibCounters'][i] -= time_diff
+				team['players'][i]['baronTimer'] -= time_diff
+			for i in range(len(team['inhibTimers'])):
+				team['inhibTimers'][i] -= time_diff
 		for event in event_data:
 			if event['EventName'] == 'TurretKilled':
 				teamId = int(event['TurretKilled'][8]) - 1
 				self.teams[teamId]['turrets'] -= 1
 			elif event['EventName'] == 'InhibKilled':
 				teamId = int(event['InhibKilled'][10]) - 1
-				self.teams[teamId]['inhibCounters'].append(60*3)
+				self.teams[teamId]['inhibTimers'].append(60*3)
 			elif event['EventName'] == 'DragonKill':
 				if event['EventName']['DragonType'] == 'Elder':
 					teamId = self.champions_map[event['KillerName']]
