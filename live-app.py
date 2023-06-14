@@ -55,7 +55,6 @@ class Game():
 				})
 			self.teams.append({
 				'players': players,
-				'soul': False,
 				'drakes': 0,
 				'turrets': 11,
 				'inhibTimers': []
@@ -66,17 +65,21 @@ class Game():
 		now_time = time.time()
 		time_diff = now_time - self.last_time
 		self.last_time = now_time
-		for team in self.teams:
-			for i in range(len(team['players'])):
-				team['players'][i]['champion'] = player_data[i]['championName']
-				team['players'][i]['level'] = player_data[i]['level']
-				team['players'][i]['kills'] = player_data[i]['scores']['kills']
-				team['players'][i]['deaths'] = player_data[i]['scores']['deaths']
-				team['players'][i]['assists'] = player_data[i]['scores']['assists']
-				team['players'][i]['creepscore'] = player_data[i]['scores']['creepScore']
-				team['players'][i]['baronTimer'] -= time_diff
-			for i in range(len(team['inhibTimers'])):
-				team['inhibTimers'][i] -= time_diff
+		for i in range(2):
+			for j in range(5):
+				self.teams[i]['players'][j]['champion'] = player_data[i*5+j]['championName']
+				self.teams[i]['players'][j]['summonerName'] = player_data[i*5+j]['summonerName']
+				self.teams[i]['players'][j]['level'] = player_data[i*5+j]['level']
+				self.teams[i]['players'][j]['kills'] = player_data[i*5+j]['scores']['kills']
+				self.teams[i]['players'][j]['deaths'] = player_data[i*5+j]['scores']['deaths']
+				self.teams[i]['players'][j]['assists'] = player_data[i*5+j]['scores']['assists']
+				self.teams[i]['players'][j]['creepscore'] = player_data[i*5+j]['scores']['creepScore']
+				self.teams[i]['players'][j]['baronTimer'] -= time_diff
+				self.teams[i]['players'][j]['elderTimer'] -= time_diff
+			for i in range(len(self.teams[i]['inhibTimers'])):
+				self.teams[i]['inhibTimers'][i] -= time_diff
+				if(self.teams[i]['inhibTimers'][i] < 0):
+					del self.teams[i]['inhibTimers'][i]
 		for event in event_data:
 			if event['EventName'] == 'TurretKilled':
 				teamId = int(event['TurretKilled'][8]) - 1
@@ -85,24 +88,42 @@ class Game():
 				teamId = int(event['InhibKilled'][10]) - 1
 				self.teams[teamId]['inhibTimers'].append(60*3)
 			elif event['EventName'] == 'DragonKill':
-				if event['EventName']['DragonType'] == 'Elder':
-					teamId = self.champions_map[event['KillerName']]
+				if event['DragonType'] == 'Elder':
+					teamId = self.get_player_teamId(event['KillerName'])
 					for player in self.teams[teamId]['players']:
 						player['elderTimer'] = 60*3
 				else:
-					teamId = self.champions_map[event['KillerName']]
+					teamId = self.get_player_teamId(event['KillerName'])
 					self.teams[teamId]['drakes'] += 1
-					if self.teams[teamId]['drakes'] == 4:
-						self.teams[teamId]['soul'] = True
 			elif event['EventName'] == 'BaronKill':
-				teamId = self.champions_map[event['KillerName']]
+				teamId = self.get_player_teamId(event['KillerName'])
 				for player in self.teams[teamId]['players']:
 					player['baronTimer'] = 60*3
-		print(self.teams[0]['turrets'])
-		print(self.teams[1]['turrets'])
+	
+	def get_player_teamId(self, summonerName):
+		for i in range(2):
+			for j in range(5):
+				if self.teams[i]['players'][j]['summonerName'] == summonerName:
+					return i
+		return 0
 
-
-		
+	def get_state(self):
+		i = 0
+		for team in self.teams:
+			i += 1
+			print(f'--- Team {i} ---')
+			print('Turrets:', team['turrets'])
+			print('Inhibs:', 3 - len(team['inhibTimers']))
+			print('Dragons:', team['drakes'])
+			for player in team['players']:
+				print('Champion:', player['champion'])
+				print('Has baron:', player['baronTimer'] > 0)
+				print('Has elder:', player['elderTimer'] > 0)
+				print('Level:', player['level'])
+				print('K:', player['kills'])
+				print('D:', player['deaths'])
+				print('A:', player['assists'])
+				print('CS:', player['creepscore'])
 
 
 # model = tf.keras.models.load_model('live-model.h5')
@@ -115,25 +136,4 @@ event_data = event_data.json()
 
 game = Game()
 game.update(player_data, event_data)
-
-def get_column_names():
-	names = []
-	for i in range(2):
-		for j in range(5):
-			playerID = str(i) + ',' + str(j)
-			names.append('Champion' + playerID)
-			names.append('Level' + playerID)
-			names.append('Kills' + playerID)
-			names.append('Deaths' + playerID)
-			names.append('Assists' + playerID)
-			names.append('Creepscore' + playerID)
-			names.append('Baron' + playerID)
-			names.append('Elder' + playerID)
-		names.append('Soul' + str(i))
-		names.append('Drakes' + str(i))
-		names.append('Turrets' + str(i))
-		names.append('Inhibs' + str(i))
-		names.append('Rifts' + str(i))
-	names.append('Time')
-	names.append('Win')
-	return names
+game.get_state()
