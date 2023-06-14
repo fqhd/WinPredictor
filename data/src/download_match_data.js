@@ -373,17 +373,17 @@ main();
 function getErrorFromStatusCode(code, key) {
 	switch(code) {
 		case 400:
-				return new Error('Bad request(syntax error in request), using key: ' + key);
+			return new Error('Bad request(syntax error in request), using key: ' + key);
 		case 401:
-				return new Error('Unauthorized request(no api key provided), using key: ' + key);
+			return new Error('Unauthorized request(no api key provided), using key: ' + key);
 		case 403:
-				return new Error('Forbidden request(invalid endpoint or invalid api key), using key: ' + key);
+			return new Error('Forbidden request(invalid endpoint or invalid api key), using key: ' + key);
 		case 404:
-				return new Error('API Endpoint not found, using key: ' + key);
+			return new Error('API Endpoint not found, using key: ' + key);
 		case 415:
-				return new Error('Unsupported media type, using key: ' + key);
+			return new Error('Unsupported media type, using key: ' + key);
 		case 429:
-				return new Error('Rate limit exceeded, using key: ' + key);
+			return new Error('Rate limit exceeded, using key: ' + key);
 		case 500:
 			return new Error('Internal server error, using key: ' + key);
 		case 503:
