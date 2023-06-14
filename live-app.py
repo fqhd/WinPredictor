@@ -73,13 +73,13 @@ class Game():
 				self.teams[i]['players'][j]['kills'] = player_data[i*5+j]['scores']['kills']
 				self.teams[i]['players'][j]['deaths'] = player_data[i*5+j]['scores']['deaths']
 				self.teams[i]['players'][j]['assists'] = player_data[i*5+j]['scores']['assists']
-				self.teams[i]['players'][j]['creepscore'] = player_data[i*5+j]['scores']['creepScore']
+				self.teams[i]['players'][j]['creepScore'] = player_data[i*5+j]['scores']['creepScore']
 				self.teams[i]['players'][j]['baronTimer'] -= time_diff
 				self.teams[i]['players'][j]['elderTimer'] -= time_diff
-			for i in range(len(self.teams[i]['inhibTimers'])):
-				self.teams[i]['inhibTimers'][i] -= time_diff
-				if(self.teams[i]['inhibTimers'][i] < 0):
-					del self.teams[i]['inhibTimers'][i]
+			for j in range(len(self.teams[j]['inhibTimers'])):
+				self.teams[i]['inhibTimers'][j] -= time_diff
+				if(self.teams[i]['inhibTimers'][j] < 0):
+					del self.teams[i]['inhibTimers'][j]
 		for event in event_data:
 			if event['EventName'] == 'TurretKilled':
 				teamId = int(event['TurretKilled'][8]) - 1
@@ -123,17 +123,18 @@ class Game():
 				print('K:', player['kills'])
 				print('D:', player['deaths'])
 				print('A:', player['assists'])
-				print('CS:', player['creepscore'])
+				print('CS:', player['creepScore'])
 
 
 # model = tf.keras.models.load_model('live-model.h5')
+
+game = Game()
 
 player_data = requests.get('https://127.0.0.1:2999/liveclientdata/playerlist', verify=False)
 event_data = requests.get('https://127.0.0.1:2999/liveclientdata/eventdata', verify=False)
 player_data = player_data.json()
 event_data = event_data.json()
 
-
-game = Game()
 game.update(player_data, event_data)
+
 game.get_state()
