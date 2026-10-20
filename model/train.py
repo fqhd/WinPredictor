@@ -140,15 +140,15 @@ def main():
 
         if val_acc > best_val_acc:
             best_val_acc = val_acc
-            torch.save(model.state_dict(), 'lstm_best.pt')
-            print(f'  -> saved lstm_best.pt (val acc {val_acc:.4f})')
+            torch.save(model.state_dict(), 'gru_best.pt')
+            print(f'  -> saved gru_best.pt (val acc {val_acc:.4f})')
 
-    model.load_state_dict(torch.load('lstm_best.pt', map_location=device))
+    model.load_state_dict(torch.load('gru_best.pt', map_location=device))
     test_acc, test_bce = evaluate(model, test_loader, device, desc='test')
     print(f'\nTest acc {test_acc:.4f} | Test bce {test_bce:.4f}')
 
-    torch.save(model.state_dict(), 'lstm_final.pt')
-    print('Saved lstm_final.pt')
+    torch.save(model.state_dict(), 'gru_final.pt')
+    print('Saved gru_final.pt')
 
 
 if __name__ == '__main__':

@@ -4,8 +4,8 @@ from torch import nn
 
 class Network(nn.Module):
     def __init__(self, n_numerical, means=None, stds=None,
-                 n_champions=173, emb_dim=4, hidden_dim=128,
-                 num_layers=2, dropout=0.3):
+                 n_champions=173, emb_dim=4, hidden_dim=64,
+                 num_layers=2, dropout=0.0, input_dropout=0.0):
         super().__init__()
 
         self.embed = nn.Embedding(n_champions, emb_dim)
@@ -18,16 +18,15 @@ class Network(nn.Module):
         self.register_buffer('stds', stds.clone().detach().float())
 
         lstm_input = emb_dim * 10 + n_numerical
-        self.lstm = nn.LSTM(
+        self.rnn = nn.GRU(
             lstm_input, hidden_dim, num_layers,
             batch_first=True,
             dropout=dropout if num_layers > 1 else 0.0,
         )
         self.head = nn.Sequential(
-            nn.Linear(hidden_dim, 64),
+            nn.Linear(hidden_dim, 32),
             nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(64, 1),
+            nn.Linear(32, 1),
         )
 
     def forward(self, x, lengths=None):
@@ -44,12 +43,12 @@ class Network(nn.Module):
             packed = nn.utils.rnn.pack_padded_sequence(
                 inp, lengths.cpu(), batch_first=True, enforce_sorted=False,
             )
-            out_packed, _ = self.lstm(packed)
+            out_packed, _ = self.rnn(packed)
             out, _ = nn.utils.rnn.pad_packed_sequence(
                 out_packed, batch_first=True,
             )
         else:
-            out, _ = self.lstm(inp)
+            out, _ = self.rnn(inp)
 
         return torch.sigmoid(self.head(out)).squeeze(-1)
 
