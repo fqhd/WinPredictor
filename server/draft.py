@@ -7,7 +7,7 @@ from flask import jsonify, request
 from model.network import DraftTransformer
 
 
-CKPT_PATH = 'draft_transformer_best.pt'          # matches what you saved
+CKPT_PATH = 'draft_transformer.pt'          # matches what you saved
 CHAMPION_MAP_PATH = 'champion_to_index.json'
 
 # Must match the value the model was TRAINED with. MultiheadAttention weight
