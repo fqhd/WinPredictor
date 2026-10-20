@@ -6,6 +6,9 @@ export default function Navbar() {
             <Link to="/" className="logo">
                 LoLytics
             </Link>
+            <Link to="/draft" className="page">
+                Draft
+            </Link>
             <Link to="/research" className="page">
                 Research
             </Link>

@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Research from './pages/Research';
 import FAQ from './pages/FAQ';
+import Draft from './pages/Draft';
 import './App.css';
 
 function App() {
@@ -11,11 +12,12 @@ function App() {
             <Navbar />
             <Routes>
                 <Route path="/" element={<Home />} />
+                <Route path="/draft" element={<Draft />} />
                 <Route path="/research" element={<Research />} />
                 <Route path="/faq" element={<FAQ />} />
             </Routes>
             <footer className="copyright">
-                © 2025 LoLytics — Open Source (MIT License) ·{' '}
+                © 2026 LoLytics — Open Source (MIT License) ·{' '}
                 <a
                     href="https://github.com/fqhd/LoLytics"
                     target="_blank"
