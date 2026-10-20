@@ -2,6 +2,7 @@ import numpy as np
 import torch
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 from model.dataset import MmapSeqDataset
 from model.network import Network
@@ -102,12 +103,16 @@ def bce(probs, labels, eps=1e-7):
                           + (1 - labels) * np.log(1 - probs + eps)))
 
 
+def spread(probs):
+    return float(np.asarray(probs).std())
+
+
 def print_by_minute(probs, labels, times):
     buckets = [(0, 5), (5, 10), (10, 15), (15, 20), (20, 25),
                (25, 30), (30, 40), (40, 100)]
     print(f'\n{"bucket":>10} | {"n":>6} | {"acc":>7} | {"ECE":>7} | '
-          f'{"bce":>7} | {"conf":>7}')
-    print('-' * 64)
+          f'{"bce":>7} | {"conf":>7} | {"spread":>7}')
+    print('-' * 74)
     for lo, hi in buckets:
         m = (times >= lo) & (times < hi)
         if m.sum() == 0:
@@ -116,7 +121,7 @@ def print_by_minute(probs, labels, times):
         conf = float(np.maximum(p, 1 - p).mean())
         print(f'{lo:>3}-{hi:<3} min | {m.sum():>6} | '
               f'{accuracy(p, y):>7.3f} | {ece(p, y, n_bins=10):>7.3f} | '
-              f'{bce(p, y):>7.3f} | {conf:>7.3f}')
+              f'{bce(p, y):>7.3f} | {conf:>7.3f} | {spread(p):>7.3f}')
 
 
 def plot_reliability(probs, labels, ece_val, out_path='reliability.png'):
@@ -142,6 +147,20 @@ def plot_reliability(probs, labels, ece_val, out_path='reliability.png'):
     plt.legend()
     plt.tight_layout()
     plt.savefig(out_path, dpi=130)
+    plt.close()
+    print(f'Saved {out_path}')
+
+
+def plot_distribution(probs, out_path='distribution.png'):
+    plt.figure(figsize=(8, 5))
+    sns.histplot(x=probs, kde=True, bins=15)
+    plt.xlabel('Predicted P(blue wins)')
+    plt.ylabel('Count')
+    plt.title(f'Distribution of predicted P(win)  |  '
+              f'spread={spread(probs):.4f}')
+    plt.tight_layout()
+    plt.savefig(out_path, dpi=130)
+    plt.close()
     print(f'Saved {out_path}')
 
 
@@ -185,15 +204,18 @@ def main():
     a = accuracy(probs, labels)
     e = ece(probs, labels)
     b = bce(probs, labels)
+    s = spread(probs)
 
     print(f'\n=== Uniform time-sampling evaluation ===')
     print(f'Games evaluated: {len(labels)}')
     print(f'Accuracy:        {a:.4f}')
     print(f'ECE (15 bins):   {e:.4f}')
     print(f'BCE:             {b:.4f}')
+    print(f'Spread:          {s:.4f}')
 
     print_by_minute(probs, labels, times)
     plot_reliability(probs, labels, e)
+    plot_distribution(probs)
 
     np.savez('test_predictions.npz', probs=probs, labels=labels, times=times)
     print('Saved test_predictions.npz')
