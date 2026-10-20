@@ -15,7 +15,7 @@ function App() {
                 <Route path="/faq" element={<FAQ />} />
             </Routes>
             <footer className="copyright">
-                © 2025 LoLytics — Open Source (MIT License) ·{' '}
+                © 2026 LoLytics — Open Source (MIT License) ·{' '}
                 <a
                     href="https://github.com/fqhd/LoLytics"
                     target="_blank"
