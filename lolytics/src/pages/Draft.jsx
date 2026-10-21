@@ -3,32 +3,17 @@ import './Draft.css';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
-const CHAMPIONS = [
-    'Aatrox', 'Ahri', 'Akali', 'Akshan', 'Alistar', 'Amumu', 'Anivia', 'Annie',
-    'Aphelios', 'Ashe', 'Aurelion Sol', 'Aurora', 'Azir', 'Bard', 'Belveth',
-    'Blitzcrank', 'Brand', 'Braum', 'Briar', 'Caitlyn', 'Camille', 'Cassiopeia',
-    'Chogath', 'Corki', 'Darius', 'Diana', 'DrMundo', 'Draven', 'Ekko',
-    'Elise', 'Evelynn', 'Ezreal', 'Fiddlesticks', 'Fiora', 'Fizz', 'Galio',
-    'Gangplank', 'Garen', 'Gnar', 'Gragas', 'Graves', 'Gwen', 'Hecarim',
-    'Heimerdinger', 'Hwei', 'Illaoi', 'Irelia', 'Ivern', 'Janna', 'JarvanIV',
-    'Jax', 'Jayce', 'Jhin', 'Jinx', 'KSante', 'Kaisa', 'Kalista', 'Karma',
-    'Karthus', 'Kassadin', 'Katarina', 'Kayle', 'Kayn', 'Kennen', 'Khazix',
-    'Kindred', 'Kled', 'KogMaw', 'Leblanc', 'LeeSin', 'Leona', 'Lillia',
-    'Lissandra', 'Locke', 'Lucian', 'Lulu', 'Lux', 'Malphite', 'Malzahar',
-    'Maokai', 'MasterYi', 'Milio', 'MissFortune', 'MonkeyKing', 'Mordekaiser',
-    'Morgana', 'Naafiri', 'Nami', 'Nasus', 'Nautilus', 'Neeko', 'Nidalee',
-    'Nilah', 'Nocturne', 'Nunu', 'Olaf', 'Orianna', 'Ornn', 'Pantheon',
-    'Poppy', 'Pyke', 'Qiyana', 'Quinn', 'Rakan', 'Rammus', 'RekSai', 'Rell',
-    'Renata', 'Renekton', 'Rengar', 'Riven', 'Rumble', 'Ryze', 'Samira',
-    'Sejuani', 'Senna', 'Seraphine', 'Sett', 'Shaco', 'Shen', 'Shyvana',
-    'Singed', 'Sion', 'Sivir', 'Skarner', 'Smolder', 'Sona', 'Soraka',
-    'Swain', 'Sylas', 'Syndra', 'TahmKench', 'Taliyah', 'Talon', 'Taric',
-    'Teemo', 'Thresh', 'Tristana', 'Trundle', 'Tryndamere', 'TwistedFate',
-    'Twitch', 'Udyr', 'Urgot', 'Varus', 'Vayne', 'Veigar', 'Velkoz', 'Vex',
-    'Vi', 'Viego', 'Viktor', 'Vladimir', 'Volibear', 'Warwick', 'Xayah',
-    'Xerath', 'XinZhao', 'Yasuo', 'Yone', 'Yorick', 'Yuumi', 'Zac', 'Zed',
-    'Zeri', 'Ziggs', 'Zilean', 'Zoe', 'Zyra',
-];
+const CHAMPIONS = ['Aatrox', 'Ahri', 'Akali', 'Akshan', 'Alistar', 'Ambessa', 'Amumu', 'Anivia', 'Annie', 'Aphelios', 'Ashe', 'AurelionSol', 'Aurora', 'Azir', 'Bard', 'Belveth', 'Blitzcrank', 'Brand', 'Braum', 'Briar', 'Caitlyn', 'Camille', 'Cassiopeia', 'Chogath', 'Corki', 'Darius', 'Diana', 'DrMundo', 'Draven', 'Ekko', 'Elise', 'Evelynn', 'Ezreal', 'FiddleSticks', 'Fiora', 'Fizz', 'Galio', 'Gangplank', 'Garen', 'Gnar', 'Gragas', 'Graves', 'Gwen', 'Hecarim', 'Heimerdinger', 'Hwei', 'Illaoi', 'Irelia', 'Ivern', 'Janna', 'JarvanIV', 'Jax', 'Jayce', 'Jhin', 'Jinx', 'KSante', 'Kaisa', 'Kalista', 'Karma', 'Karthus', 'Kassadin', 'Katarina', 'Kayle', 'Kayn', 'Kennen', 'Khazix', 'Kindred', 'Kled', 'KogMaw', 'Leblanc', 'LeeSin', 'Leona', 'Lillia', 'Lissandra', 'Lucian', 'Lulu', 'Lux', 'Malphite', 'Malzahar', 'Maokai', 'MasterYi', 'Mel', 'Milio', 'MissFortune', 'Mordekaiser', 'Morgana', 'Naafiri', 'Nami', 'Nasus', 'Nautilus', 'Neeko', 'Nidalee', 'Nilah', 'Nocturne', 'Nunu', 'Olaf', 'Orianna', 'Ornn', 'Pantheon', 'Poppy', 'Pyke', 'Qiyana', 'Quinn', 'Rakan', 'Rammus', 'RekSai', 'Rell', 'Renata', 'Renekton', 'Rengar', 'Riven', 'Rumble', 'Ryze', 'Samira', 'Sejuani', 'Senna', 'Seraphine', 'Sett', 'Shaco', 'Shen', 'Shyvana', 'Singed', 'Sion', 'Sivir', 'Skarner', 'Smolder', 'Sona', 'Soraka', 'Swain', 'Sylas', 'Syndra', 'TahmKench', 'Taliyah', 'Talon', 'Taric', 'Teemo', 'Thresh', 'Tristana', 'Trundle', 'Tryndamere', 'TwistedFate', 'Twitch', 'Udyr', 'Urgot', 'Varus', 'Vayne', 'Veigar', 'Velkoz', 'Vex', 'Vi', 'Viego', 'Viktor', 'Vladimir', 'Volibear', 'Warwick', 'Wukong', 'Xayah', 'Xerath', 'XinZhao', 'Yasuo', 'Yone', 'Yorick', 'Yunara', 'Yuumi', 'Zaahen', 'Zac', 'Zed', 'Zeri', 'Ziggs', 'Zilean', 'Zoe', 'Zyra', 'Locke'];
+
+// Frontend display name -> server name (used for the API request and icon path).
+// Add entries here when the frontend spelling differs from Riot's canonical name.
+const ALIASES = {
+    Wukong: 'MonkeyKing',
+};
+
+function toServerName(name) {
+    return ALIASES[name] || name;
+}
 
 const ROLES = ['Top', 'Jungle', 'Mid', 'Bot', 'Support'];
 
@@ -59,24 +44,20 @@ function snapToChampion(text) {
     const lower = text.toLowerCase().trim();
     if (!lower) return '';
 
-    // 1. Exact (case-insensitive)
     const exact = CHAMPIONS.find((c) => c.toLowerCase() === lower);
     if (exact) return exact;
 
-    // 2. Unique prefix
     const starts = CHAMPIONS.filter((c) => c.toLowerCase().startsWith(lower));
     if (starts.length === 1) return starts[0];
     if (starts.length > 1) {
         return starts.sort((a, b) => a.length - b.length)[0];
     }
 
-    // 3. Substring
     const includes = CHAMPIONS.filter((c) => c.toLowerCase().includes(lower));
     if (includes.length >= 1) {
         return includes.sort((a, b) => a.length - b.length)[0];
     }
 
-    // 4. Edit distance (fuzzy for typos)
     let best = '';
     let bestDist = Infinity;
     for (const c of CHAMPIONS) {
@@ -98,8 +79,7 @@ function previewChampion(text) {
     const lower = text.toLowerCase().trim();
     if (!lower) return '';
     const starts = CHAMPIONS.filter((c) => c.toLowerCase().startsWith(lower));
-    if (starts.length === 1) return starts[0];
-    return '';
+    return starts[0];
 }
 
 export default function Draft() {
@@ -162,7 +142,6 @@ export default function Draft() {
     };
 
     const handlePredict = async () => {
-        // Snap all values defensively before validating
         const snappedBlue = blueChamps.map(snapToChampion);
         const snappedRed = redChamps.map(snapToChampion);
         setBlueChamps(snappedBlue);
@@ -178,10 +157,14 @@ export default function Draft() {
         setResult(null);
 
         try {
+            // Alias to server names before joining
+            const blueServer = snappedBlue.map(toServerName);
+            const redServer = snappedRed.map(toServerName);
+
             const url =
                 `${apiUrl}/api/draft/` +
-                `?blue=${encodeURIComponent(snappedBlue.join(','))}` +
-                `&red=${encodeURIComponent(snappedRed.join(','))}`;
+                `?blue=${encodeURIComponent(blueServer.join(','))}` +
+                `&red=${encodeURIComponent(redServer.join(','))}`;
 
             const resp = await fetch(url);
             if (resp.status !== 200) {
@@ -216,15 +199,16 @@ export default function Draft() {
         const value = side === 'blue' ? blueChamps[index] : redChamps[index];
         const preview = previewChampion(value);
         const refs = side === 'blue' ? blueRefs : redRefs;
+        const iconName = preview ? toServerName(preview) : null;
 
         return (
             <div className="draft-slot" key={`${side}-${index}`}>
                 <span className="draft-role">{ROLES[index]}</span>
                 <div className="draft-input-wrapper">
-                    {preview ? (
+                    {iconName ? (
                         <img
                             className="draft-icon"
-                            src={`/images/icons/${preview}.jpg`}
+                            src={`/images/icons/${iconName}.jpg`}
                             alt={preview}
                             onError={(e) => {
                                 e.target.style.visibility = 'hidden';
