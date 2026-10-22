@@ -89,6 +89,10 @@ export default function Draft() {
     const [result, setResult] = useState(null);
     const [error, setError] = useState('');
 
+    // Drag & drop state: which slot is being dragged / hovered
+    const [dragFrom, setDragFrom] = useState(null); // { side, index }
+    const [dragOver, setDragOver] = useState(null); // { side, index }
+
     const blueRefs = useRef([]);
     const redRefs = useRef([]);
 
@@ -141,6 +145,81 @@ export default function Draft() {
         }
     };
 
+    /* ---------------- Drag & drop ---------------- */
+
+    /** Swap the champions of two slots (or move into an empty slot). */
+    const moveChampion = (from, to) => {
+        if (!from || !to) return;
+        if (from.side === to.side && from.index === to.index) return;
+
+        const blue = [...blueChamps];
+        const red = [...redChamps];
+        const srcArr = from.side === 'blue' ? blue : red;
+        const dstArr = to.side === 'blue' ? blue : red;
+
+        const moving = snapToChampion(srcArr[from.index]) || srcArr[from.index];
+        if (!moving) return;
+
+        srcArr[from.index] = dstArr[to.index];
+        dstArr[to.index] = moving;
+
+        setBlueChamps(blue);
+        setRedChamps(red);
+        setResult(null);
+        setError('');
+    };
+
+    const handleDragStart = (side, index, e) => {
+        const arr = side === 'blue' ? blueChamps : redChamps;
+        const champion = snapToChampion(arr[index]);
+        if (!champion) {
+            e.preventDefault();
+            return;
+        }
+        setDragFrom({ side, index });
+        setDragOver(null);
+        e.dataTransfer.effectAllowed = 'move';
+        // Required for Firefox to actually start the drag
+        e.dataTransfer.setData('text/plain', champion);
+    };
+
+    const handleDragOver = (side, index, e) => {
+        if (!dragFrom) return;
+        // Don't allow dropping onto the slot we're dragging from
+        if (dragFrom.side === side && dragFrom.index === index) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        setDragOver((prev) =>
+            prev && prev.side === side && prev.index === index
+                ? prev
+                : { side, index },
+        );
+    };
+
+    const handleDragLeave = (side, index, e) => {
+        // Ignore dragleave events fired when moving over child elements
+        if (e.currentTarget.contains(e.relatedTarget)) return;
+        setDragOver((prev) =>
+            prev && prev.side === side && prev.index === index ? null : prev,
+        );
+    };
+
+    const handleDrop = (side, index, e) => {
+        e.preventDefault();
+        if (dragFrom) {
+            moveChampion(dragFrom, { side, index });
+        }
+        setDragFrom(null);
+        setDragOver(null);
+    };
+
+    const handleDragEnd = () => {
+        setDragFrom(null);
+        setDragOver(null);
+    };
+
+    /* ---------------- Actions ---------------- */
+
     const handlePredict = async () => {
         const snappedBlue = blueChamps.map(snapToChampion);
         const snappedRed = redChamps.map(snapToChampion);
@@ -185,6 +264,8 @@ export default function Draft() {
         setRedChamps(Array(5).fill(''));
         setResult(null);
         setError('');
+        setDragFrom(null);
+        setDragOver(null);
         blueRefs.current[0]?.focus();
     };
 
@@ -198,11 +279,40 @@ export default function Draft() {
     const renderSlot = (side, index) => {
         const value = side === 'blue' ? blueChamps[index] : redChamps[index];
         const preview = previewChampion(value);
+        const snapped = snapToChampion(value);
         const refs = side === 'blue' ? blueRefs : redRefs;
         const iconName = preview ? toServerName(preview) : null;
 
+        const isDragging =
+            dragFrom && dragFrom.side === side && dragFrom.index === index;
+        const isDragOver =
+            !isDragging &&
+            dragOver &&
+            dragOver.side === side &&
+            dragOver.index === index;
+
         return (
-            <div className="draft-slot" key={`${side}-${index}`}>
+            <div
+                key={`${side}-${index}`}
+                className={
+                    'draft-slot' +
+                    (isDragging ? ' draft-slot-dragging' : '') +
+                    (isDragOver ? ' draft-slot-drag-over' : '')
+                }
+                draggable={Boolean(snapped)}
+                onDragStart={(e) => handleDragStart(side, index, e)}
+                onDragEnd={handleDragEnd}
+                onDragOver={(e) => handleDragOver(side, index, e)}
+                onDragLeave={(e) => handleDragLeave(side, index, e)}
+                onDrop={(e) => handleDrop(side, index, e)}
+                style={{
+                    opacity: isDragging ? 0.4 : 1,
+                    cursor: snapped ? 'grab' : undefined,
+                    outline: isDragOver ? '2px dashed #4a9eff' : undefined,
+                    outlineOffset: isDragOver ? '2px' : undefined,
+                    borderRadius: isDragOver ? '8px' : undefined,
+                }}
+            >
                 <span className="draft-role">{ROLES[index]}</span>
                 <div className="draft-input-wrapper">
                     {iconName ? (
@@ -210,12 +320,16 @@ export default function Draft() {
                             className="draft-icon"
                             src={`/images/icons/${iconName}.jpg`}
                             alt={preview}
+                            title="Drag to move"
+                            draggable={false}
                             onError={(e) => {
                                 e.target.style.visibility = 'hidden';
                             }}
                         />
                     ) : (
-                        <div className="draft-icon draft-icon-placeholder">?</div>
+                        <div className="draft-icon draft-icon-placeholder">
+                            ?
+                        </div>
                     )}
                     <input
                         ref={(el) => (refs.current[index] = el)}
