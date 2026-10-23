@@ -89,9 +89,9 @@ export default function Draft() {
     const [result, setResult] = useState(null);
     const [error, setError] = useState('');
 
-    // Drag & drop state: which slot is being dragged / hovered
-    const [dragFrom, setDragFrom] = useState(null); // { side, index }
-    const [dragOver, setDragOver] = useState(null); // { side, index }
+    const [dragFrom, setDragFrom] = useState(null);   // { side, index }
+    const [dragOver, setDragOver] = useState(null);   // { side, index }
+    const [hoveredSlot, setHoveredSlot] = useState(null); // { side, index }
 
     const blueRefs = useRef([]);
     const redRefs = useRef([]);
@@ -147,7 +147,6 @@ export default function Draft() {
 
     /* ---------------- Drag & drop ---------------- */
 
-    /** Swap the champions of two slots (or move into an empty slot). */
     const moveChampion = (from, to) => {
         if (!from || !to) return;
         if (from.side === to.side && from.index === to.index) return;
@@ -178,14 +177,13 @@ export default function Draft() {
         }
         setDragFrom({ side, index });
         setDragOver(null);
+        setHoveredSlot(null);
         e.dataTransfer.effectAllowed = 'move';
-        // Required for Firefox to actually start the drag
         e.dataTransfer.setData('text/plain', champion);
     };
 
     const handleDragOver = (side, index, e) => {
         if (!dragFrom) return;
-        // Don't allow dropping onto the slot we're dragging from
         if (dragFrom.side === side && dragFrom.index === index) return;
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
@@ -197,7 +195,6 @@ export default function Draft() {
     };
 
     const handleDragLeave = (side, index, e) => {
-        // Ignore dragleave events fired when moving over child elements
         if (e.currentTarget.contains(e.relatedTarget)) return;
         setDragOver((prev) =>
             prev && prev.side === side && prev.index === index ? null : prev,
@@ -236,7 +233,6 @@ export default function Draft() {
         setResult(null);
 
         try {
-            // Alias to server names before joining
             const blueServer = snappedBlue.map(toServerName);
             const redServer = snappedRed.map(toServerName);
 
@@ -266,6 +262,7 @@ export default function Draft() {
         setError('');
         setDragFrom(null);
         setDragOver(null);
+        setHoveredSlot(null);
         blueRefs.current[0]?.focus();
     };
 
@@ -274,6 +271,39 @@ export default function Draft() {
         setBlueChamps([...redChamps]);
         setRedChamps(b);
         setResult(null);
+        setHoveredSlot(null);
+    };
+
+    /**
+     * Resolve the matchup number to display next to a slot.
+     *
+     * The number is shown from the perspective of the champion it's displayed
+     * against: positive = that champion has the advantage, negative = the enemy
+     * has the advantage. Because the raw value is "attacker's strength into
+     * defender", we negate it so the sign matches the slot it's shown next to.
+     *
+     * - Red slot j, default:    -blue_into_red[j][j]
+     * - Red slot j, hover blue i: -blue_into_red[i][j]
+     * - Blue slot i, default:   -red_into_blue[i][i]
+     * - Blue slot i, hover red j: -red_into_blue[j][i]
+     */
+    const getMatchupValue = (side, index) => {
+        if (!result || !result.matchups) return null;
+        const { blue_into_red, red_into_blue } = result.matchups;
+
+        if (side === 'red') {
+            const raw =
+                hoveredSlot && hoveredSlot.side === 'blue'
+                    ? blue_into_red?.[hoveredSlot.index]?.[index]
+                    : blue_into_red?.[index]?.[index];
+            return raw == null ? null : -raw;
+        }
+
+        const raw =
+            hoveredSlot && hoveredSlot.side === 'red'
+                ? red_into_blue?.[hoveredSlot.index]?.[index]
+                : red_into_blue?.[index]?.[index];
+        return raw == null ? null : -raw;
     };
 
     const renderSlot = (side, index) => {
@@ -290,27 +320,60 @@ export default function Draft() {
             dragOver &&
             dragOver.side === side &&
             dragOver.index === index;
+        const isMatchupHovered =
+            result && hoveredSlot && hoveredSlot.side !== side;
+
+        const matchupValue = getMatchupValue(side, index);
+
+        let matchupClass = 'draft-matchup-neutral';
+        if (matchupValue !== null) {
+            if (matchupValue > 0.005) matchupClass = 'draft-matchup-positive';
+            else if (matchupValue < -0.005) matchupClass = 'draft-matchup-negative';
+        }
+
+        const slotClass =
+            'draft-slot' +
+            (snapped ? ' draft-slot-draggable' : '') +
+            (isDragging ? ' draft-slot-dragging' : '') +
+            (isDragOver ? ' draft-slot-drag-over' : '') +
+            (isMatchupHovered ? ' draft-slot-matchup-hover' : '');
+
+        const displayStr =
+            matchupValue === null
+                ? ''
+                : Math.abs(matchupValue) < 0.005
+                ? '0.00'
+                : `${matchupValue > 0 ? '+' : ''}${matchupValue.toFixed(2)}`;
+
+        const matchupTitle =
+            matchupValue === null
+                ? ''
+                : `Matchup strength: ${displayStr}\n` +
+                  (matchupValue > 0
+                      ? 'Positive = advantage for this champion'
+                      : matchupValue < 0
+                      ? 'Negative = advantage for the enemy'
+                      : 'Even matchup');
 
         return (
             <div
                 key={`${side}-${index}`}
-                className={
-                    'draft-slot' +
-                    (isDragging ? ' draft-slot-dragging' : '') +
-                    (isDragOver ? ' draft-slot-drag-over' : '')
-                }
+                className={slotClass}
                 draggable={Boolean(snapped)}
                 onDragStart={(e) => handleDragStart(side, index, e)}
                 onDragEnd={handleDragEnd}
                 onDragOver={(e) => handleDragOver(side, index, e)}
                 onDragLeave={(e) => handleDragLeave(side, index, e)}
                 onDrop={(e) => handleDrop(side, index, e)}
-                style={{
-                    opacity: isDragging ? 0.4 : 1,
-                    cursor: snapped ? 'grab' : undefined,
-                    outline: isDragOver ? '2px dashed #4a9eff' : undefined,
-                    outlineOffset: isDragOver ? '2px' : undefined,
-                    borderRadius: isDragOver ? '8px' : undefined,
+                onMouseEnter={() => {
+                    if (snapped && !dragFrom) setHoveredSlot({ side, index });
+                }}
+                onMouseLeave={() => {
+                    setHoveredSlot((prev) =>
+                        prev && prev.side === side && prev.index === index
+                            ? null
+                            : prev,
+                    );
                 }}
             >
                 <span className="draft-role">{ROLES[index]}</span>
@@ -327,9 +390,7 @@ export default function Draft() {
                             }}
                         />
                     ) : (
-                        <div className="draft-icon draft-icon-placeholder">
-                            ?
-                        </div>
+                        <div className="draft-icon draft-icon-placeholder">?</div>
                     )}
                     <input
                         ref={(el) => (refs.current[index] = el)}
@@ -345,6 +406,11 @@ export default function Draft() {
                         spellCheck={false}
                         autoComplete="off"
                     />
+                    {matchupValue !== null && (
+                        <span className={`draft-matchup ${matchupClass}`} title={matchupTitle}>
+                            {displayStr}
+                        </span>
+                    )}
                 </div>
             </div>
         );
@@ -355,7 +421,9 @@ export default function Draft() {
             <div className="draft-header">
                 <h1>Draft Analysis</h1>
                 <p className="draft-subtitle">
-                    Predict win probability from a champion draft.
+                    Predict win probability from a champion draft. Drag a
+                    champion onto another slot to swap them. Hover a champion to
+                    preview its matchup into the enemy team.
                 </p>
             </div>
 
