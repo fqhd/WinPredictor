@@ -421,9 +421,7 @@ export default function Draft() {
             <div className="draft-header">
                 <h1>Draft Analysis</h1>
                 <p className="draft-subtitle">
-                    Predict win probability from a champion draft. Drag a
-                    champion onto another slot to swap them. Hover a champion to
-                    preview its matchup into the enemy team.
+                    Predict win probability from a champion draft.
                 </p>
             </div>
 
